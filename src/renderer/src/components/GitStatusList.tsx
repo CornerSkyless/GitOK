@@ -303,8 +303,8 @@ const GitStatusList: React.FC<GitStatusListProps> = ({ gitStatuses, isLoading })
         {filteredStatuses.map((status) => (
           <div key={status.path} className="status-card">
             <div className="status-header">
-              <span className="status-icon">{getStatusIcon(status)}</span>
               <span className="project-name">{status.name}</span>
+              <span className="status-icon">{getStatusIcon(status)}</span>
             </div>
             <div className="status-details">
               <div className="status-text">{getStatusText(status)}</div>
