@@ -444,6 +444,7 @@ body {
   gap: 1.5rem;
   /* 确保网格容器也不显示滚动条 */
   overflow: hidden;
+  padding-top: 3rem;
 }
 
 .status-card {
@@ -556,7 +557,7 @@ body {
 
   .status-grid {
     grid-template-columns: 1fr;
-    padding-top: 1rem;
+    padding-top: 3rem;
   }
 
   .status-header {
