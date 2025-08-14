@@ -301,6 +301,68 @@ body {
   font-size: 0.8rem;
 }
 
+/* 排序控制器组件 */
+.sort-controller {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-left: auto;
+}
+
+.sort-label {
+  font-weight: 500;
+  color: #718096;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.sort-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #4a5568;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sort-item:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+  transform: translateY(-1px);
+}
+
+.sort-item.active {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+}
+
+.sort-item.active .sort-text {
+  color: white;
+}
+
+.sort-item.active .sort-icon {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.sort-text {
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.sort-icon {
+  font-weight: 600;
+  color: #718096;
+  font-size: 1rem;
+}
+
 /* 筛选信息显示 */
 .filter-info {
   display: flex;

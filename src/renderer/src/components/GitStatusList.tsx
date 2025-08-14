@@ -21,6 +21,9 @@ interface GitStatusListProps {
 // 筛选类型
 type FilterType = 'all' | 'notGitRepo' | 'hasChanges' | 'pendingPush' | 'behind' | 'synced'
 
+// 排序类型
+type SortType = 'name' | 'lastUpdate' | 'status'
+
 // 状态统计组件
 const StatusStats: React.FC<{
   gitStatuses: GitStatus[]
@@ -77,22 +80,63 @@ const StatusStats: React.FC<{
   )
 }
 
+// 排序控制器组件
+const SortController: React.FC<{
+  sortType: SortType
+  sortDirection: 'asc' | 'desc'
+  onSortChange: (sortType: SortType) => void
+}> = ({ sortType, sortDirection, onSortChange }) => {
+  const getSortClass = (type: SortType): string => {
+    return `sort-item ${sortType === type ? 'active' : ''}`
+  }
+
+  const getSortIcon = (type: SortType): string => {
+    if (sortType !== type) return '↕️'
+    return sortDirection === 'asc' ? '↑' : '↓'
+  }
+
+  return (
+    <div className="sort-controller">
+      <span className="sort-label">排序方式:</span>
+      <span className={getSortClass('lastUpdate')} onClick={() => onSortChange('lastUpdate')}>
+        <span className="sort-text">最新更新</span>
+        <span className="sort-icon">{getSortIcon('lastUpdate')}</span>
+      </span>
+      <span className={getSortClass('name')} onClick={() => onSortChange('name')}>
+        <span className="sort-text">项目名称</span>
+        <span className="sort-icon">{getSortIcon('name')}</span>
+      </span>
+      <span className={getSortClass('status')} onClick={() => onSortChange('status')}>
+        <span className="sort-text">状态优先级</span>
+        <span className="sort-icon">{getSortIcon('status')}</span>
+      </span>
+    </div>
+  )
+}
+
 const GitStatusList: React.FC<GitStatusListProps> = ({ gitStatuses, isLoading }) => {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all')
+  const [sortType, setSortType] = useState<SortType>('lastUpdate')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
   // 根据筛选条件过滤状态列表
   const filteredStatuses = useMemo(() => {
+    let filtered: GitStatus[] = []
     switch (activeFilter) {
       case 'notGitRepo':
-        return gitStatuses.filter((s) => !s.isGitRepo)
+        filtered = gitStatuses.filter((s) => !s.isGitRepo)
+        break
       case 'hasChanges':
-        return gitStatuses.filter((s) => s.isGitRepo && s.hasUncommittedChanges)
+        filtered = gitStatuses.filter((s) => s.isGitRepo && s.hasUncommittedChanges)
+        break
       case 'pendingPush':
-        return gitStatuses.filter((s) => s.isGitRepo && (!s.isPushed || s.aheadCount > 0))
+        filtered = gitStatuses.filter((s) => s.isGitRepo && (!s.isPushed || s.aheadCount > 0))
+        break
       case 'behind':
-        return gitStatuses.filter((s) => s.isGitRepo && s.behindCount > 0)
+        filtered = gitStatuses.filter((s) => s.isGitRepo && s.behindCount > 0)
+        break
       case 'synced':
-        return gitStatuses.filter(
+        filtered = gitStatuses.filter(
           (s) =>
             s.isGitRepo &&
             !s.hasUncommittedChanges &&
@@ -100,10 +144,58 @@ const GitStatusList: React.FC<GitStatusListProps> = ({ gitStatuses, isLoading })
             s.aheadCount === 0 &&
             s.behindCount === 0
         )
+        break
       default:
-        return gitStatuses
+        filtered = gitStatuses
     }
-  }, [gitStatuses, activeFilter])
+
+    // 排序逻辑
+    return filtered.sort((a, b) => {
+      let comparison = 0
+
+      switch (sortType) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name)
+          break
+        case 'lastUpdate': {
+          // 处理日期排序，非Git仓库排在最后
+          if (!a.isGitRepo && !b.isGitRepo) return 0
+          if (!a.isGitRepo) return 1
+          if (!b.isGitRepo) return -1
+
+          const dateA = a.lastCommitDate ? new Date(a.lastCommitDate).getTime() : 0
+          const dateB = b.lastCommitDate ? new Date(b.lastCommitDate).getTime() : 0
+          comparison = dateA - dateB
+          break
+        }
+        case 'status': {
+          // 按状态优先级排序：有更改 > 待推送 > 落后 > 同步 > 非Git
+          const getStatusPriority = (status: GitStatus): number => {
+            if (!status.isGitRepo) return 0
+            if (status.hasUncommittedChanges) return 4
+            if (!status.isPushed || status.aheadCount > 0) return 3
+            if (status.behindCount > 0) return 2
+            return 1
+          }
+          comparison = getStatusPriority(b) - getStatusPriority(a)
+          break
+        }
+      }
+
+      return sortDirection === 'asc' ? comparison : -comparison
+    })
+  }, [gitStatuses, activeFilter, sortType, sortDirection])
+
+  const handleSortChange = (newSortType: SortType): void => {
+    if (sortType === newSortType) {
+      // 如果点击的是当前排序类型，则切换排序方向
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      // 如果是新的排序类型，设置为降序
+      setSortType(newSortType)
+      setSortDirection('desc')
+    }
+  }
 
   if (isLoading) {
     return (
@@ -175,6 +267,11 @@ const GitStatusList: React.FC<GitStatusListProps> = ({ gitStatuses, isLoading })
           gitStatuses={gitStatuses}
           activeFilter={activeFilter}
           onFilterChange={setActiveFilter}
+        />
+        <SortController
+          sortType={sortType}
+          sortDirection={sortDirection}
+          onSortChange={handleSortChange}
         />
       </div>
 
