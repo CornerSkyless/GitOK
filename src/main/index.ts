@@ -1,13 +1,15 @@
-import { app, shell, BrowserWindow, ipcMain, dialog, Tray, Menu, nativeImage } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, Tray, Menu } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/git.png?asset'
 import { spawn } from 'child_process'
 import { readdir, stat } from 'fs/promises'
 import { existsSync } from 'fs'
 
 let tray: Tray | null = null
 let mainWindow: BrowserWindow | null = null
+
+// 定义图标路径 - 使用黑色图标，让系统自动处理颜色
+const iconPath = join(__dirname, '../../resources/gitTemplate@2x.png')
 
 // 扩展 app 对象类型
 const appWithQuiting = app as typeof app & { isQuiting: boolean }
@@ -46,14 +48,8 @@ function updateTrayIcon(
 }
 
 function createTray(): void {
-  // 创建状态栏图标，设置为 macOS 推荐的 16x16 尺寸
-  let trayIcon = nativeImage.createFromPath(icon)
-  trayIcon.setTemplateImage(true) // 在 macOS 上使用模板图片，会自动适应系统主题
-
   // macOS 状态栏推荐尺寸为 16x16
-  trayIcon = trayIcon.resize({ width: 16, height: 16 })
-
-  tray = new Tray(trayIcon)
+  tray = new Tray(iconPath)
   tray.setToolTip('GitOK - Git 状态监控')
 
   // 创建状态栏菜单
@@ -103,7 +99,7 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     title: 'GitOK',
-    ...(process.platform === 'linux' ? { icon } : {}),
+    ...(process.platform === 'linux' ? { icon: iconPath } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
