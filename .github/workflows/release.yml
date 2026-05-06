@@ -7,14 +7,7 @@ on:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        include:
-          - os: macos-latest
-            arch: arm64
-          - os: macos-13
-            arch: x64
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -25,10 +18,13 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npx electron-vite build
-      - run: npx electron-builder --mac --${{ matrix.arch }}
+      - name: Build arm64
+        run: npx electron-builder --mac --arm64
+      - name: Build x64
+        run: npx electron-builder --mac --x64
       - uses: actions/upload-artifact@v4
         with:
-          name: build-${{ matrix.arch }}
+          name: build
           path: dist/
 
   release:
@@ -42,9 +38,7 @@ jobs:
       - name: Prepare release artifacts
         run: |
           mkdir release-artifacts
-          # ZIP 文件已包含架构名（如 GitOK-1.0.2-arm64-mac.zip），直接收集
           find . -name "*.zip" -exec cp {} release-artifacts/ \;
-          # DMG 文件名相同（gitok-1.0.2.dmg），添加架构后缀避免覆盖
           find . -name "*.dmg" -exec sh -c '
             for f; do
               dir=$(dirname "$f")
