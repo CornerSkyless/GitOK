@@ -99,8 +99,14 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     title: 'GitOK',
-    resizable: false, // 禁用resize功能
-    maximizable: false, // 禁用最大化功能
+    ...(process.platform === 'darwin'
+      ? {
+          titleBarStyle: 'hidden',
+          trafficLightPosition: { x: 12, y: 12 }
+        }
+      : {
+          frame: false
+        }),
     ...(process.platform === 'linux' ? { icon: iconPath } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -122,6 +128,15 @@ function createWindow(): void {
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
+  })
+
+  // 监听窗口最大化/还原事件，通知渲染进程
+  mainWindow.on('maximize', () => {
+    mainWindow?.webContents.send('window-maximized-changed', true)
+  })
+
+  mainWindow.on('unmaximize', () => {
+    mainWindow?.webContents.send('window-maximized-changed', false)
   })
 
   // HMR for renderer base on electron-vite cli.
@@ -393,4 +408,25 @@ ipcMain.handle('scanGitRepos', async (_, rootPath: string, includeRemote: boolea
     console.error('扫描 Git 仓库失败:', error)
     throw error
   }
+})
+
+// 窗口控制 IPC 处理器
+ipcMain.handle('window-minimize', () => {
+  mainWindow?.minimize()
+})
+
+ipcMain.handle('window-maximize', () => {
+  if (mainWindow?.isMaximized()) {
+    mainWindow.unmaximize()
+  } else {
+    mainWindow?.maximize()
+  }
+})
+
+ipcMain.handle('window-close', () => {
+  mainWindow?.close()
+})
+
+ipcMain.handle('window-is-maximized', () => {
+  return mainWindow?.isMaximized() ?? false
 })

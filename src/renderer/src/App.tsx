@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import DirectoryConfig from './components/DirectoryConfig'
 import GitStatusList, { GitStatus } from './components/GitStatusList'
+import TitleBar from './components/TitleBar'
 import './assets/main.css'
 
 function App(): React.JSX.Element {
@@ -170,6 +171,7 @@ function App(): React.JSX.Element {
 
   return (
     <div className="app">
+      <TitleBar />
       <header className="app-header">
         <h1>GitOK - Git 状态监控器</h1>
         <p>监控本地目录下一级子文件夹的 Git 状态</p>

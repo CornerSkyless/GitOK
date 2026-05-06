@@ -13,6 +13,15 @@ interface GitStatus {
   lastCommitDate?: string
 }
 
+interface WindowControls {
+  minimize: () => Promise<void>
+  maximize: () => Promise<void>
+  close: () => Promise<void>
+  isMaximized: () => Promise<boolean>
+  onMaximizeChange: (callback: (isMaximized: boolean) => void) => void
+  getPlatform: () => NodeJS.Platform
+}
+
 interface CustomAPI {
   selectDirectory: () => Promise<{ canceled: boolean; filePaths: string[] }>
   scanGitRepos: (rootPath: string, includeRemote?: boolean) => Promise<GitStatus[]>
@@ -28,6 +37,8 @@ interface CustomAPI {
   // 配置相关方法
   saveConfig: (key: string, value: string) => { success: boolean; error?: string }
   getConfig: (key: string, defaultValue?: string) => string
+  // 窗口控制
+  windowControls: WindowControls
 }
 
 declare global {

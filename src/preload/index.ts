@@ -53,6 +53,19 @@ const api = {
       console.error('获取配置失败:', error)
       return defaultValue
     }
+  },
+  // 窗口控制
+  windowControls: {
+    minimize: () => ipcRenderer.invoke('window-minimize'),
+    maximize: () => ipcRenderer.invoke('window-maximize'),
+    close: () => ipcRenderer.invoke('window-close'),
+    isMaximized: () => ipcRenderer.invoke('window-is-maximized'),
+    onMaximizeChange: (callback: (isMaximized: boolean) => void) => {
+      ipcRenderer.on('window-maximized-changed', (_event, isMaximized: boolean) => {
+        callback(isMaximized)
+      })
+    },
+    getPlatform: () => process.platform
   }
 }
 
