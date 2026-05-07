@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 
-function TitleBar(): React.JSX.Element {
+interface TitleBarProps {
+  onOpenSettings: () => void
+}
+
+function TitleBar({ onOpenSettings }: TitleBarProps): React.JSX.Element {
   const [isMaximized, setIsMaximized] = useState(false)
   const platform = window.api.windowControls.getPlatform()
   const isMac = platform === 'darwin'
@@ -22,13 +26,50 @@ function TitleBar(): React.JSX.Element {
         <div className="titlebar-drag titlebar-content">
           <div className="titlebar-traffic-light-spacer" />
           <span className="titlebar-title">GitOK</span>
-          <div className="titlebar-traffic-light-spacer" />
+          <div className="titlebar-traffic-light-spacer titlebar-settings-spacer">
+            <button
+              className="titlebar-settings-btn"
+              onClick={onOpenSettings}
+              aria-label="打开设置"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M8 10a2 2 0 100-4 2 2 0 000 4z"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                />
+                <path
+                  d="M13.5 8a5.5 5.5 0 01-.3 1.8l1.3 1a.8.8 0 01.2 1l-.6 1a.8.8 0 01-1 .3l-1.5-.6a5.5 5.5 0 01-1.7 1l-.3 1.6a.8.8 0 01-.8.6h-1.2a.8.8 0 01-.8-.6l-.3-1.6a5.5 5.5 0 01-1.7-1l-1.5.6a.8.8 0 01-1-.3l-.6-1a.8.8 0 01.2-1l1.3-1A5.5 5.5 0 012.5 8c0-.6.1-1.2.3-1.8l-1.3-1a.8.8 0 01-.2-1l.6-1a.8.8 0 011-.3l1.5.6a5.5 5.5 0 011.7-1l.3-1.6a.8.8 0 01.8-.6h1.2c.4 0 .7.3.8.6l.3 1.6a5.5 5.5 0 011.7 1l1.5-.6a.8.8 0 011 .3l.6 1a.8.8 0 01-.2 1l-1.3 1c.2.6.3 1.2.3 1.8z"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       ) : (
         // Windows: 左侧标题，右侧窗口控制按钮
         <>
           <div className="titlebar-drag titlebar-content titlebar-content--left">
             <span className="titlebar-title">GitOK</span>
+            <button
+              className="titlebar-settings-btn titlebar-settings-btn--win"
+              onClick={onOpenSettings}
+              aria-label="打开设置"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M8 10a2 2 0 100-4 2 2 0 000 4z"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                />
+                <path
+                  d="M13.5 8a5.5 5.5 0 01-.3 1.8l1.3 1a.8.8 0 01.2 1l-.6 1a.8.8 0 01-1 .3l-1.5-.6a5.5 5.5 0 01-1.7 1l-.3 1.6a.8.8 0 01-.8.6h-1.2a.8.8 0 01-.8-.6l-.3-1.6a5.5 5.5 0 01-1.7-1l-1.5.6a.8.8 0 01-1-.3l-.6-1a.8.8 0 01.2-1l1.3-1A5.5 5.5 0 012.5 8c0-.6.1-1.2.3-1.8l-1.3-1a.8.8 0 01-.2-1l.6-1a.8.8 0 011-.3l1.5.6a5.5 5.5 0 011.7-1l.3-1.6a.8.8 0 01.8-.6h1.2c.4 0 .7.3.8.6l.3 1.6a5.5 5.5 0 011.7 1l1.5-.6a.8.8 0 011 .3l.6 1a.8.8 0 01-.2 1l-1.3 1c.2.6.3 1.2.3 1.8z"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                />
+              </svg>
+            </button>
           </div>
           <div className="titlebar-controls">
             <button

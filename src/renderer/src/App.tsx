@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import DirectoryConfig from './components/DirectoryConfig'
 import GitStatusList, { GitStatus } from './components/GitStatusList'
 import TitleBar from './components/TitleBar'
+import SettingsModal from './components/SettingsModal'
 import './assets/main.css'
 
 function App(): React.JSX.Element {
@@ -11,6 +11,7 @@ function App(): React.JSX.Element {
   const [autoCheckEnabled, setAutoCheckEnabled] = useState<boolean>(false)
   const [lastCheckTime, setLastCheckTime] = useState<Date | null>(null)
   const [nextCheckTime, setNextCheckTime] = useState<Date | null>(null)
+  const [showSettings, setShowSettings] = useState<boolean>(false)
 
   // 定时器引用
   const localCheckTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -171,52 +172,45 @@ function App(): React.JSX.Element {
 
   return (
     <div className="app">
-      <TitleBar />
+      <TitleBar onOpenSettings={() => setShowSettings(true)} />
       <header className="app-header">
         <h1>GitOK - Git 状态监控器</h1>
         <p>监控本地目录下一级子文件夹的 Git 状态</p>
       </header>
 
       <main className="app-main">
-        <DirectoryConfig
-          onDirectoryChange={handleDirectoryChange}
-          currentDirectory={currentDirectory}
-        />
-
         {currentDirectory && (
-          <div className="refresh-section">
-            <button onClick={refreshStatus} className="refresh-btn">
-              刷新状态
-            </button>
-
-            <div className="auto-check-controls">
-              <button
-                onClick={autoCheckEnabled ? stopAutoCheck : startAutoCheck}
-                className={`auto-check-btn ${autoCheckEnabled ? 'enabled' : 'disabled'}`}
-              >
-                {autoCheckEnabled ? '停止自动检查' : '启动自动检查'}
-              </button>
-
+          <div className="toolbar">
+            <div className="toolbar-left">
+              <span className="toolbar-current-dir" title={currentDirectory}>
+                {currentDirectory}
+              </span>
+            </div>
+            <div className="toolbar-right">
               {autoCheckEnabled && (
-                <div className="check-status">
-                  {lastCheckTime && (
-                    <span className="last-check">
-                      上次检查: {lastCheckTime.toLocaleTimeString('zh-CN')}
-                    </span>
-                  )}
-                  {nextCheckTime && (
-                    <span className="next-check">
-                      下次检查: {nextCheckTime.toLocaleTimeString('zh-CN')}
-                    </span>
-                  )}
-                </div>
+                <span className="toolbar-auto-indicator">自动检查已开启</span>
               )}
+              <button onClick={refreshStatus} className="refresh-btn">
+                刷新状态
+              </button>
             </div>
           </div>
         )}
 
         <GitStatusList gitStatuses={gitStatuses} isLoading={isLoading} />
       </main>
+
+      <SettingsModal
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        currentDirectory={currentDirectory}
+        onDirectoryChange={handleDirectoryChange}
+        autoCheckEnabled={autoCheckEnabled}
+        onStartAutoCheck={startAutoCheck}
+        onStopAutoCheck={stopAutoCheck}
+        lastCheckTime={lastCheckTime}
+        nextCheckTime={nextCheckTime}
+      />
     </div>
   )
 }
