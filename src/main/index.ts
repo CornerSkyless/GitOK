@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, dialog, Tray, Menu } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, Tray, Menu, nativeImage } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { spawn } from 'child_process'
@@ -8,8 +8,10 @@ import { existsSync } from 'fs'
 let tray: Tray | null = null
 let mainWindow: BrowserWindow | null = null
 
-// 定义图标路径 - 使用黑色图标，让系统自动处理颜色
+// 图标路径
 const iconPath = join(__dirname, '../../resources/gitTemplate@2x.png')
+const appIconPath = join(__dirname, '../../build/icon.png')
+const appIconIcnsPath = join(__dirname, '../../build/icon.icns')
 
 // 扩展 app 对象类型
 const appWithQuiting = app as typeof app & { isQuiting: boolean }
@@ -107,7 +109,7 @@ function createWindow(): void {
       : {
           frame: false
         }),
-    ...(process.platform === 'linux' ? { icon: iconPath } : {}),
+    ...(process.platform === 'darwin' ? {} : { icon: appIconPath }),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
@@ -170,6 +172,12 @@ app.whenReady().then(() => {
   // 在 macOS 上创建状态栏图标
   if (process.platform === 'darwin') {
     createTray()
+    // 设置 Dock 图标
+    try {
+      app.dock!.setIcon(nativeImage.createFromPath(appIconIcnsPath))
+    } catch (e) {
+      console.error('设置 Dock 图标失败:', e)
+    }
   }
 
   app.on('activate', function () {
