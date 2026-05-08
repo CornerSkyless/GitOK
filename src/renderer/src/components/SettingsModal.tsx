@@ -1,4 +1,15 @@
-import React from 'react'
+import React, { useState } from 'react'
+
+interface UpdateCheckResult {
+  hasError: boolean
+  error?: string
+  hasUpdate?: boolean
+  currentVersion?: string
+  latestVersion?: string
+  downloadUrl?: string
+  releaseNotes?: string
+  publishedAt?: string
+}
 
 interface SettingsModalProps {
   open: boolean
@@ -23,6 +34,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   lastCheckTime,
   nextCheckTime
 }) => {
+  const [updateResult, setUpdateResult] = useState<UpdateCheckResult | null>(null)
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
+
   if (!open) return null
 
   const handleSelectDirectory = async (): Promise<void> => {
@@ -35,6 +49,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       console.error('选择目录失败:', error)
       const errorMessage = error instanceof Error ? error.message : String(error)
       alert(`选择目录失败: ${errorMessage}`)
+    }
+  }
+
+  const handleCheckUpdate = async (): Promise<void> => {
+    setIsCheckingUpdate(true)
+    setUpdateResult(null)
+    try {
+      const result = await window.api.checkForUpdates()
+      setUpdateResult(result)
+    } catch (error) {
+      setUpdateResult({ hasError: true, error: String(error) })
+    } finally {
+      setIsCheckingUpdate(false)
     }
   }
 
@@ -99,6 +126,58 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       下次检查: {nextCheckTime.toLocaleTimeString('zh-CN')}
                     </span>
                   )}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* 检查更新 */}
+          <section className="settings-section">
+            <h3>检查更新</h3>
+            <p className="settings-section-desc">从 GitHub Release 检查是否有新版本可用</p>
+            <div className="settings-update-controls">
+              <button
+                onClick={handleCheckUpdate}
+                disabled={isCheckingUpdate}
+                className="settings-update-btn"
+              >
+                {isCheckingUpdate ? '检查中...' : '检查更新'}
+              </button>
+
+              {updateResult && !updateResult.hasError && (
+                <div className="settings-update-result">
+                  <div className="settings-update-versions">
+                    <span className="settings-version-tag">当前版本: v{updateResult.currentVersion}</span>
+                    <span className="settings-version-arrow">→</span>
+                    <span
+                      className={`settings-version-tag ${updateResult.hasUpdate ? 'settings-version-tag--new' : 'settings-version-tag--latest'}`}
+                    >
+                      最新版本: v{updateResult.latestVersion}
+                    </span>
+                  </div>
+                  {updateResult.hasUpdate ? (
+                    <div className="settings-update-available">
+                      <p>有新版本可用！</p>
+                      <a
+                        href={updateResult.downloadUrl}
+                        className="settings-download-link"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          window.open(updateResult.downloadUrl, '_blank')
+                        }}
+                      >
+                        前往下载 →
+                      </a>
+                    </div>
+                  ) : (
+                    <p className="settings-update-latest">已是最新版本</p>
+                  )}
+                </div>
+              )}
+
+              {updateResult?.hasError && (
+                <div className="settings-update-error">
+                  检查更新失败: {updateResult.error}
                 </div>
               )}
             </div>

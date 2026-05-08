@@ -369,6 +369,124 @@ body {
   border: 1px solid #cbd5e0;
 }
 
+/* 检查更新 */
+.settings-update-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.settings-update-btn {
+  padding: 0.6rem 1.25rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.settings-update-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.settings-update-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.settings-update-result {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.settings-update-versions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.settings-version-tag {
+  font-size: 0.85rem;
+  color: #4a5568;
+  background: #edf2f7;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid #cbd5e0;
+}
+
+.settings-version-tag--latest {
+  background: #f0fff4;
+  border-color: #c6f6d5;
+  color: #276749;
+}
+
+.settings-version-tag--new {
+  background: #fffaf0;
+  border-color: #feebc8;
+  color: #c05621;
+}
+
+.settings-version-arrow {
+  color: #a0aec0;
+  font-size: 0.9rem;
+}
+
+.settings-update-available {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.settings-update-available p {
+  color: #c05621;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.settings-download-link {
+  display: inline-block;
+  padding: 0.4rem 0.9rem;
+  background: #48bb78;
+  color: white;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.settings-download-link:hover {
+  background: #38a169;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+}
+
+.settings-update-latest {
+  color: #276749;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.settings-update-error {
+  font-size: 0.85rem;
+  color: #e53e3e;
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 6px;
+  padding: 0.6rem 0.9rem;
+}
+
 /* Git 状态列表 */
 .git-status-list {
   background: white;
@@ -722,11 +840,23 @@ body {
   letter-spacing: 0.5px;
   flex: 1;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .titlebar--win .titlebar-title {
   text-align: left;
   flex: none;
+  justify-content: flex-start;
+}
+
+.titlebar-version {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0;
 }
 
 /* Windows 窗口控制按钮 */

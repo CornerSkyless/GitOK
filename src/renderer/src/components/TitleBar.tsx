@@ -6,6 +6,7 @@ interface TitleBarProps {
 
 function TitleBar({ onOpenSettings }: TitleBarProps): React.JSX.Element {
   const [isMaximized, setIsMaximized] = useState(false)
+  const [appVersion, setAppVersion] = useState('')
   const platform = window.api.windowControls.getPlatform()
   const isMac = platform === 'darwin'
 
@@ -17,6 +18,9 @@ function TitleBar({ onOpenSettings }: TitleBarProps): React.JSX.Element {
     window.api.windowControls.onMaximizeChange((maximized) => {
       setIsMaximized(maximized)
     })
+
+    // 获取应用版本
+    window.api.getAppVersion().then(setAppVersion)
   }, [])
 
   return (
@@ -25,7 +29,10 @@ function TitleBar({ onOpenSettings }: TitleBarProps): React.JSX.Element {
         // macOS: 左侧留出交通灯间距，居中显示标题
         <div className="titlebar-drag titlebar-content">
           <div className="titlebar-traffic-light-spacer" />
-          <span className="titlebar-title">GitOK</span>
+          <span className="titlebar-title">
+            GitOK
+            {appVersion && <span className="titlebar-version">v{appVersion}</span>}
+          </span>
           <div className="titlebar-traffic-light-spacer titlebar-settings-spacer">
             <button
               className="titlebar-settings-btn"
@@ -51,7 +58,10 @@ function TitleBar({ onOpenSettings }: TitleBarProps): React.JSX.Element {
         // Windows: 左侧标题，右侧窗口控制按钮
         <>
           <div className="titlebar-drag titlebar-content titlebar-content--left">
-            <span className="titlebar-title">GitOK</span>
+            <span className="titlebar-title">
+              GitOK
+              {appVersion && <span className="titlebar-version">v{appVersion}</span>}
+            </span>
             <button
               className="titlebar-settings-btn titlebar-settings-btn--win"
               onClick={onOpenSettings}

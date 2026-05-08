@@ -430,3 +430,65 @@ ipcMain.handle('window-close', () => {
 ipcMain.handle('window-is-maximized', () => {
   return mainWindow?.isMaximized() ?? false
 })
+
+// 版本比较辅助函数
+function compareVersions(v1: string, v2: string): number {
+  const parts1 = v1.split('.').map(Number)
+  const parts2 = v2.split('.').map(Number)
+  for (let i = 0; i < 3; i++) {
+    if (parts1[i] > parts2[i]) return 1
+    if (parts1[i] < parts2[i]) return -1
+  }
+  return 0
+}
+
+interface UpdateCheckResult {
+  hasError: boolean
+  error?: string
+  hasUpdate?: boolean
+  currentVersion?: string
+  latestVersion?: string
+  downloadUrl?: string
+  releaseNotes?: string
+  publishedAt?: string
+}
+
+ipcMain.handle('getAppVersion', () => {
+  return app.getVersion()
+})
+
+ipcMain.handle('checkForUpdates', async (): Promise<UpdateCheckResult> => {
+  try {
+    const response = await fetch(
+      'https://api.github.com/repos/CornerSkyless/GitOK/releases/latest',
+      {
+        headers: {
+          Accept: 'application/vnd.github.v3+json',
+          'User-Agent': 'GitOK'
+        }
+      }
+    )
+
+    if (!response.ok) {
+      return { hasError: true, error: `请求失败 (HTTP ${response.status})` }
+    }
+
+    const release = await response.json()
+    const latestVersion = (release.tag_name as string).replace(/^v/, '')
+    const currentVersion = app.getVersion()
+
+    const hasUpdate = compareVersions(latestVersion, currentVersion) > 0
+
+    return {
+      hasError: false,
+      hasUpdate,
+      currentVersion,
+      latestVersion,
+      downloadUrl: release.html_url as string,
+      releaseNotes: (release.body as string) || '',
+      publishedAt: release.published_at as string
+    }
+  } catch (error) {
+    return { hasError: true, error: String(error) }
+  }
+})

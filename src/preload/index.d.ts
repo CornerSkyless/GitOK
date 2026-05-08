@@ -37,6 +37,19 @@ interface CustomAPI {
   // 配置相关方法
   saveConfig: (key: string, value: string) => { success: boolean; error?: string }
   getConfig: (key: string, defaultValue?: string) => string
+  // 获取应用版本
+  getAppVersion: () => Promise<string>
+  // 检查更新
+  checkForUpdates: () => Promise<{
+    hasError: boolean
+    error?: string
+    hasUpdate?: boolean
+    currentVersion?: string
+    latestVersion?: string
+    downloadUrl?: string
+    releaseNotes?: string
+    publishedAt?: string
+  }>
   // 窗口控制
   windowControls: WindowControls
 }

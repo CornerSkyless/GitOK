@@ -54,6 +54,19 @@ const api = {
       return defaultValue
     }
   },
+  // 获取应用版本
+  getAppVersion: () => {
+    return ipcRenderer.invoke('getAppVersion')
+  },
+  // 检查更新
+  checkForUpdates: async () => {
+    try {
+      return await ipcRenderer.invoke('checkForUpdates')
+    } catch (error) {
+      console.error('检查更新失败:', error)
+      return { hasError: true, error: String(error) }
+    }
+  },
   // 窗口控制
   windowControls: {
     minimize: () => ipcRenderer.invoke('window-minimize'),
