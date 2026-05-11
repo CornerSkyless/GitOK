@@ -908,20 +908,23 @@ body {
 
 .commit-info {
   background: var(--bg-card);
-  padding: 0.65rem 0.75rem;
-  border-radius: 4px;
+  padding: 0.4rem 0.55rem;
+  border-radius: 3px;
   border: 1px solid var(--border);
 }
 
 .commit-message {
   font-weight: 500;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.1rem;
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .commit-date {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
 }
 
