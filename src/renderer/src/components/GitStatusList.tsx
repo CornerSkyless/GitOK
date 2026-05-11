@@ -1,4 +1,13 @@
 import React, { useState, useMemo } from 'react'
+import {
+  HiXCircle,
+  HiExclamationTriangle,
+  HiArrowUp,
+  HiArrowUpCircle,
+  HiArrowDown,
+  HiCheckCircle,
+  HiArrowsUpDown
+} from 'react-icons/hi2'
 
 export interface GitStatus {
   path: string
@@ -90,9 +99,9 @@ const SortController: React.FC<{
     return `sort-item ${sortType === type ? 'active' : ''}`
   }
 
-  const getSortIcon = (type: SortType): string => {
-    if (sortType !== type) return '↕️'
-    return sortDirection === 'asc' ? '↑' : '↓'
+  const getSortIcon = (type: SortType): React.ReactNode => {
+    if (sortType !== type) return <HiArrowsUpDown size={14} />
+    return sortDirection === 'asc' ? <HiArrowUp size={14} /> : <HiArrowDown size={14} />
   }
 
   return (
@@ -213,17 +222,17 @@ const GitStatusList: React.FC<GitStatusListProps> = ({ gitStatuses, isLoading })
     )
   }
 
-  const getStatusIcon = (status: GitStatus): string => {
-    if (!status.isGitRepo) return '❌'
+  const getStatusIcon = (status: GitStatus): React.ReactNode => {
+    if (!status.isGitRepo) return <HiXCircle size={18} style={{ color: 'var(--danger)' }} />
 
     // 优先显示最重要的状态图标
     if (status.hasUncommittedChanges && (!status.isPushed || status.aheadCount > 0)) {
-      return '⚠️⬆️' // 同时有更改和待推送
+      return <><HiExclamationTriangle size={18} style={{ color: 'var(--warning)' }} /><HiArrowUpCircle size={18} style={{ color: 'var(--accent)' }} /></> // 同时有更改和待推送
     }
-    if (status.hasUncommittedChanges) return '⚠️'
-    if (!status.isPushed || status.aheadCount > 0) return '⬆️'
-    if (status.behindCount > 0) return '⬇️'
-    return '✅'
+    if (status.hasUncommittedChanges) return <HiExclamationTriangle size={18} style={{ color: 'var(--warning)' }} />
+    if (!status.isPushed || status.aheadCount > 0) return <HiArrowUpCircle size={18} style={{ color: 'var(--accent)' }} />
+    if (status.behindCount > 0) return <HiArrowDown size={18} style={{ color: 'var(--warning)' }} />
+    return <HiCheckCircle size={18} style={{ color: 'var(--success)' }} />
   }
 
   const getStatusText = (status: GitStatus): string => {

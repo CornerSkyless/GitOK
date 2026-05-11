@@ -873,6 +873,10 @@ body {
 
 .status-icon {
   font-size: 1.3rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  vertical-align: middle;
 }
 
 .status-card .status-icon {
