@@ -465,6 +465,10 @@ ipcMain.handle('getAppVersion', () => {
   return app.getVersion()
 })
 
+ipcMain.handle('openFolder', async (_, folderPath: string) => {
+  await shell.openPath(folderPath)
+})
+
 ipcMain.handle('checkForUpdates', async (): Promise<UpdateCheckResult> => {
   try {
     const response = await fetch(

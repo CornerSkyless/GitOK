@@ -58,6 +58,14 @@ const api = {
   getAppVersion: () => {
     return ipcRenderer.invoke('getAppVersion')
   },
+  // 在系统文件管理器中打开路径
+  openFolder: async (folderPath: string) => {
+    try {
+      return await ipcRenderer.invoke('openFolder', folderPath)
+    } catch (error) {
+      console.error('打开文件夹失败:', error)
+    }
+  },
   // 检查更新
   checkForUpdates: async () => {
     try {

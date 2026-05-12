@@ -883,10 +883,32 @@ body {
   letter-spacing: 0.3rem;
 }
 
+.project-name-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .project-name {
   font-weight: 600;
   font-size: 1.05rem;
   color: var(--text-primary);
+}
+
+.folder-open-btn {
+  color: var(--text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.status-card:hover .folder-open-btn {
+  opacity: 1;
+}
+
+.folder-open-btn:hover {
+  color: var(--accent);
 }
 
 .status-details {

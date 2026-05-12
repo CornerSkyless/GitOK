@@ -39,6 +39,8 @@ interface CustomAPI {
   getConfig: (key: string, defaultValue?: string) => string
   // 获取应用版本
   getAppVersion: () => Promise<string>
+  // 在系统文件管理器中打开路径
+  openFolder: (folderPath: string) => Promise<void>
   // 检查更新
   checkForUpdates: () => Promise<{
     hasError: boolean

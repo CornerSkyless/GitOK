@@ -6,7 +6,8 @@ import {
   HiArrowUpCircle,
   HiArrowDown,
   HiCheckCircle,
-  HiArrowsUpDown
+  HiArrowsUpDown,
+  HiOutlineFolderOpen
 } from 'react-icons/hi2'
 
 export interface GitStatus {
@@ -312,7 +313,14 @@ const GitStatusList: React.FC<GitStatusListProps> = ({ gitStatuses, isLoading })
         {filteredStatuses.map((status) => (
           <div key={status.path} className="status-card">
             <div className="status-header">
-              <span className="project-name">{status.name}</span>
+              <span className="project-name-wrap">
+                <span className="project-name">{status.name}</span>
+                <HiOutlineFolderOpen
+                  className="folder-open-btn"
+                  size={14}
+                  onClick={() => window.api.openFolder(status.path)}
+                />
+              </span>
               <span className="status-icon">{getStatusIcon(status)}</span>
             </div>
             <div className="status-details">
