@@ -4,6 +4,17 @@ import TitleBar from './components/TitleBar'
 import SettingsModal from './components/SettingsModal'
 import './assets/main.css'
 
+interface UpdateCheckResult {
+  hasError: boolean
+  error?: string
+  hasUpdate?: boolean
+  currentVersion?: string
+  latestVersion?: string
+  downloadUrl?: string
+  releaseNotes?: string
+  publishedAt?: string
+}
+
 function App(): React.JSX.Element {
   const [currentDirectory, setCurrentDirectory] = useState<string>('')
   const [gitStatuses, setGitStatuses] = useState<GitStatus[]>([])
@@ -12,6 +23,8 @@ function App(): React.JSX.Element {
   const [lastCheckTime, setLastCheckTime] = useState<Date | null>(null)
   const [nextCheckTime, setNextCheckTime] = useState<Date | null>(null)
   const [showSettings, setShowSettings] = useState<boolean>(false)
+  const [hasUpdate, setHasUpdate] = useState<boolean>(false)
+  const [updateResult, setUpdateResult] = useState<UpdateCheckResult | null>(null)
 
   // 定时器引用
   const localCheckTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -37,6 +50,14 @@ function App(): React.JSX.Element {
         }, 100)
       }
     }
+
+    // 启动时静默检查版本更新
+    window.api.checkForUpdates().then((result) => {
+      if (!result.hasError && result.hasUpdate) {
+        setHasUpdate(true)
+        setUpdateResult(result)
+      }
+    })
   }, [])
 
   // 清理定时器
@@ -172,7 +193,7 @@ function App(): React.JSX.Element {
 
   return (
     <div className="app">
-      <TitleBar onOpenSettings={() => setShowSettings(true)} />
+      <TitleBar onOpenSettings={() => setShowSettings(true)} hasUpdate={hasUpdate} />
       <header className="app-header">
         <h1>GitOK - Git 状态监控器</h1>
         <p>监控本地目录下一级子文件夹的 Git 状态</p>
@@ -210,6 +231,7 @@ function App(): React.JSX.Element {
         onStopAutoCheck={stopAutoCheck}
         lastCheckTime={lastCheckTime}
         nextCheckTime={nextCheckTime}
+        initialUpdateResult={updateResult}
       />
     </div>
   )

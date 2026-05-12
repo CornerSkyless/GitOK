@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 
 interface TitleBarProps {
   onOpenSettings: () => void
+  hasUpdate?: boolean
 }
 
-function TitleBar({ onOpenSettings }: TitleBarProps): React.JSX.Element {
+function TitleBar({ onOpenSettings, hasUpdate }: TitleBarProps): React.JSX.Element {
   const [isMaximized, setIsMaximized] = useState(false)
   const [appVersion, setAppVersion] = useState('')
   const platform = window.api.windowControls.getPlatform()
@@ -39,18 +40,33 @@ function TitleBar({ onOpenSettings }: TitleBarProps): React.JSX.Element {
               onClick={onOpenSettings}
               aria-label="打开设置"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M8 10a2 2 0 100-4 2 2 0 000 4z"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                />
-                <path
-                  d="M13.5 8a5.5 5.5 0 01-.3 1.8l1.3 1a.8.8 0 01.2 1l-.6 1a.8.8 0 01-1 .3l-1.5-.6a5.5 5.5 0 01-1.7 1l-.3 1.6a.8.8 0 01-.8.6h-1.2a.8.8 0 01-.8-.6l-.3-1.6a5.5 5.5 0 01-1.7-1l-1.5.6a.8.8 0 01-1-.3l-.6-1a.8.8 0 01.2-1l1.3-1A5.5 5.5 0 012.5 8c0-.6.1-1.2.3-1.8l-1.3-1a.8.8 0 01-.2-1l.6-1a.8.8 0 011-.3l1.5.6a5.5 5.5 0 011.7-1l.3-1.6a.8.8 0 01.8-.6h1.2c.4 0 .7.3.8.6l.3 1.6a5.5 5.5 0 011.7 1l1.5-.6a.8.8 0 011 .3l.6 1a.8.8 0 01-.2 1l-1.3 1c.2.6.3 1.2.3 1.8z"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                />
-              </svg>
+              <div style={{ position: 'relative', display: 'inline-flex' }}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M8 10a2 2 0 100-4 2 2 0 000 4z"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d="M13.5 8a5.5 5.5 0 01-.3 1.8l1.3 1a.8.8 0 01.2 1l-.6 1a.8.8 0 01-1 .3l-1.5-.6a5.5 5.5 0 01-1.7 1l-.3 1.6a.8.8 0 01-.8.6h-1.2a.8.8 0 01-.8-.6l-.3-1.6a5.5 5.5 0 01-1.7-1l-1.5.6a.8.8 0 01-1-.3l-.6-1a.8.8 0 01.2-1l1.3-1A5.5 5.5 0 012.5 8c0-.6.1-1.2.3-1.8l-1.3-1a.8.8 0 01-.2-1l.6-1a.8.8 0 011-.3l1.5.6a5.5 5.5 0 011.7-1l.3-1.6a.8.8 0 01.8-.6h1.2c.4 0 .7.3.8.6l.3 1.6a5.5 5.5 0 011.7 1l1.5-.6a.8.8 0 011 .3l.6 1a.8.8 0 01-.2 1l-1.3 1c.2.6.3 1.2.3 1.8z"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                  />
+                </svg>
+                {hasUpdate && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: -2,
+                      right: -2,
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: 'var(--accent)'
+                    }}
+                  />
+                )}
+              </div>
             </button>
           </div>
         </div>
@@ -67,18 +83,33 @@ function TitleBar({ onOpenSettings }: TitleBarProps): React.JSX.Element {
               onClick={onOpenSettings}
               aria-label="打开设置"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M8 10a2 2 0 100-4 2 2 0 000 4z"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                />
-                <path
-                  d="M13.5 8a5.5 5.5 0 01-.3 1.8l1.3 1a.8.8 0 01.2 1l-.6 1a.8.8 0 01-1 .3l-1.5-.6a5.5 5.5 0 01-1.7 1l-.3 1.6a.8.8 0 01-.8.6h-1.2a.8.8 0 01-.8-.6l-.3-1.6a5.5 5.5 0 01-1.7-1l-1.5.6a.8.8 0 01-1-.3l-.6-1a.8.8 0 01.2-1l1.3-1A5.5 5.5 0 012.5 8c0-.6.1-1.2.3-1.8l-1.3-1a.8.8 0 01-.2-1l.6-1a.8.8 0 011-.3l1.5.6a5.5 5.5 0 011.7-1l.3-1.6a.8.8 0 01.8-.6h1.2c.4 0 .7.3.8.6l.3 1.6a5.5 5.5 0 011.7 1l1.5-.6a.8.8 0 011 .3l.6 1a.8.8 0 01-.2 1l-1.3 1c.2.6.3 1.2.3 1.8z"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                />
-              </svg>
+              <div style={{ position: 'relative', display: 'inline-flex' }}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M8 10a2 2 0 100-4 2 2 0 000 4z"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                  />
+                  <path
+                    d="M13.5 8a5.5 5.5 0 01-.3 1.8l1.3 1a.8.8 0 01.2 1l-.6 1a.8.8 0 01-1 .3l-1.5-.6a5.5 5.5 0 01-1.7 1l-.3 1.6a.8.8 0 01-.8.6h-1.2a.8.8 0 01-.8-.6l-.3-1.6a5.5 5.5 0 01-1.7-1l-1.5.6a.8.8 0 01-1-.3l-.6-1a.8.8 0 01.2-1l1.3-1A5.5 5.5 0 012.5 8c0-.6.1-1.2.3-1.8l-1.3-1a.8.8 0 01-.2-1l.6-1a.8.8 0 011-.3l1.5.6a5.5 5.5 0 011.7-1l.3-1.6a.8.8 0 01.8-.6h1.2c.4 0 .7.3.8.6l.3 1.6a5.5 5.5 0 011.7 1l1.5-.6a.8.8 0 011 .3l.6 1a.8.8 0 01-.2 1l-1.3 1c.2.6.3 1.2.3 1.8z"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                  />
+                </svg>
+                {hasUpdate && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: -2,
+                      right: -2,
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: 'var(--accent)'
+                    }}
+                  />
+                )}
+              </div>
             </button>
           </div>
           <div className="titlebar-controls">

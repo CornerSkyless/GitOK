@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 interface UpdateCheckResult {
   hasError: boolean
@@ -21,6 +21,7 @@ interface SettingsModalProps {
   onStopAutoCheck: () => void
   lastCheckTime: Date | null
   nextCheckTime: Date | null
+  initialUpdateResult?: UpdateCheckResult | null
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -32,10 +33,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onStartAutoCheck,
   onStopAutoCheck,
   lastCheckTime,
-  nextCheckTime
+  nextCheckTime,
+  initialUpdateResult
 }) => {
-  const [updateResult, setUpdateResult] = useState<UpdateCheckResult | null>(null)
+  const [updateResult, setUpdateResult] = useState<UpdateCheckResult | null>(
+    initialUpdateResult ?? null
+  )
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
+
+  // 当 initialUpdateResult 更新时同步到本地状态
+  useEffect(() => {
+    if (initialUpdateResult) {
+      setUpdateResult(initialUpdateResult)
+    }
+  }, [initialUpdateResult])
 
   if (!open) return null
 
