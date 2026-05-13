@@ -9,6 +9,14 @@ When creating commits, include this trailer:
 Co-Authored-By: GPT-5.5 <noreply@openai.com>
 ```
 
+## Release Notes
+
+When preparing a release, add a Markdown file at `.github/release-notes/<tag>.md` before pushing the tag. Write concise bullet points that describe user-facing product changes only.
+
+- Include visible app behavior, UI, feature, update-check, packaging, or bug-fix changes that matter to someone using GitOK.
+- Exclude development-only work such as CI fixes, release workflow changes, dependency/tooling updates, refactors, typecheck/lint changes, and repository maintenance.
+- Do not rely on GitHub's generated "Full Changelog" as the release description.
+
 ## Commands
 
 - `npm run dev` — Start development with hot reload (electron-vite)
