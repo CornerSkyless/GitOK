@@ -30,6 +30,7 @@ function App(): React.JSX.Element {
   const localCheckTimerRef = useRef<NodeJS.Timeout | null>(null)
   const remoteCheckTimerRef = useRef<NodeJS.Timeout | null>(null)
   const lastRemoteCheckRef = useRef<Date | null>(null)
+  const scanRequestIdRef = useRef(0)
 
   // 加载保存的配置
   useEffect(() => {
@@ -89,19 +90,30 @@ function App(): React.JSX.Element {
       includeRemote: boolean = true,
       preserveExistingStatuses: boolean = true
     ): Promise<void> => {
+      const scanRequestId = scanRequestIdRef.current + 1
+      scanRequestIdRef.current = scanRequestId
+
       try {
         setIsLoading(true)
         const statuses = await window.api.scanGitRepos(directory, includeRemote)
+
+        if (scanRequestId !== scanRequestIdRef.current) {
+          return
+        }
+
         setGitStatuses(statuses)
+        void window.api.updateTrayIcon(statuses)
         setLastCheckTime(new Date())
         calculateNextCheckTime()
       } catch (error) {
         console.error('扫描 Git 仓库失败:', error)
-        if (!preserveExistingStatuses) {
+        if (scanRequestId === scanRequestIdRef.current && !preserveExistingStatuses) {
           setGitStatuses([])
         }
       } finally {
-        setIsLoading(false)
+        if (scanRequestId === scanRequestIdRef.current) {
+          setIsLoading(false)
+        }
       }
     },
     []

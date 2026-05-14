@@ -3,7 +3,6 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { spawn } from 'child_process'
 import { readdir, stat } from 'fs/promises'
-import { existsSync } from 'fs'
 
 let tray: Tray | null = null
 let mainWindow: BrowserWindow | null = null
@@ -213,11 +212,7 @@ app.on('will-quit', () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
-// Git 状态检查函数
-async function checkGitStatus(
-  repoPath: string,
-  includeRemote: boolean = true
-): Promise<{
+interface GitStatusResult {
   isGitRepo: boolean
   hasUncommittedChanges: boolean
   isPushed: boolean
@@ -226,70 +221,123 @@ async function checkGitStatus(
   branch?: string
   lastCommitMessage?: string
   lastCommitDate?: string
-}> {
-  try {
-    // 检查是否为 git 仓库
-    const gitDir = join(repoPath, '.git')
-    if (!existsSync(gitDir)) {
-      return {
-        isGitRepo: false,
-        hasUncommittedChanges: false,
-        isPushed: true,
-        aheadCount: 0,
-        behindCount: 0
-      }
-    }
+}
 
+function createNonGitStatus(): GitStatusResult {
+  return {
+    isGitRepo: false,
+    hasUncommittedChanges: false,
+    isPushed: true,
+    aheadCount: 0,
+    behindCount: 0
+  }
+}
+
+async function isGitRepository(repoPath: string): Promise<boolean> {
+  try {
+    const result = await executeGitCommand(repoPath, ['rev-parse', '--is-inside-work-tree'])
+    return result.trim() === 'true'
+  } catch {
+    return false
+  }
+}
+
+async function getUpstreamBranch(repoPath: string): Promise<string | undefined> {
+  try {
+    const result = await executeGitCommand(repoPath, [
+      'rev-parse',
+      '--abbrev-ref',
+      '--symbolic-full-name',
+      '@{upstream}'
+    ])
+    return result.trim() || undefined
+  } catch {
+    return undefined
+  }
+}
+
+// Git 状态检查函数
+async function checkGitStatus(
+  repoPath: string,
+  includeRemote: boolean = true
+): Promise<GitStatusResult> {
+  const isGitRepo = await isGitRepository(repoPath)
+
+  if (!isGitRepo) {
+    return createNonGitStatus()
+  }
+
+  let hasUncommittedChanges = false
+  let branch = ''
+  let lastCommitMessage: string | undefined
+  let lastCommitDate: string | undefined
+  let behindCount = 0
+  let aheadCount = 0
+
+  try {
     // 检查是否有未提交的更改
     const statusResult = await executeGitCommand(repoPath, ['status', '--porcelain'])
-    const hasUncommittedChanges = statusResult.trim().length > 0
+    hasUncommittedChanges = statusResult.trim().length > 0
+  } catch (error) {
+    console.error(`检查 Git 工作区状态失败 ${repoPath}:`, error)
+  }
 
+  try {
     // 获取当前分支
     const branchResult = await executeGitCommand(repoPath, ['branch', '--show-current'])
-    const branch = branchResult.trim()
+    branch = branchResult.trim()
+  } catch (error) {
+    console.error(`获取 Git 分支失败 ${repoPath}:`, error)
+  }
 
+  try {
     // 获取最后一次提交信息
     const logResult = await executeGitCommand(repoPath, ['log', '-1', '--pretty=format:%s|%ci'])
-    const [lastCommitMessage, lastCommitDate] = logResult.split('|')
-
-    // 检查与远程的关系
-    let behindCount = 0
-    let aheadCount = 0
-    if (includeRemote && branch) {
-      const remoteResult = await executeGitCommand(repoPath, [
-        'rev-list',
-        '--count',
-        'HEAD..origin/' + branch
-      ])
-      behindCount = parseInt(remoteResult.trim()) || 0
-
-      const aheadResult = await executeGitCommand(repoPath, [
-        'rev-list',
-        '--count',
-        'origin/' + branch + '..HEAD'
-      ])
-      aheadCount = parseInt(aheadResult.trim()) || 0
-    }
-
-    return {
-      isGitRepo: true,
-      hasUncommittedChanges,
-      isPushed: behindCount === 0 && aheadCount === 0,
-      aheadCount,
-      behindCount,
-      branch,
-      lastCommitMessage,
-      lastCommitDate: lastCommitDate ? new Date(lastCommitDate).toLocaleString('zh-CN') : undefined
-    }
+    const [message, date] = logResult.split('|')
+    lastCommitMessage = message
+    lastCommitDate = date
   } catch (error) {
-    console.error(`检查 Git 状态失败 ${repoPath}:`, error)
-    return {
-      isGitRepo: false,
-      hasUncommittedChanges: false,
-      isPushed: true,
-      aheadCount: 0,
-      behindCount: 0
+    console.error(`获取 Git 最后提交失败 ${repoPath}:`, error)
+  }
+
+  // 检查与远程的关系。没有 upstream 的分支跳过远程差异检查。
+  if (includeRemote && branch) {
+    const upstreamBranch = await getUpstreamBranch(repoPath)
+
+    if (upstreamBranch) {
+      try {
+        const remoteResult = await executeGitCommand(repoPath, [
+          'rev-list',
+          '--count',
+          'HEAD..' + upstreamBranch
+        ])
+        behindCount = parseInt(remoteResult.trim()) || 0
+      } catch (error) {
+        console.error(`检查 Git 落后远程状态失败 ${repoPath}:`, error)
+      }
+
+      try {
+        const aheadResult = await executeGitCommand(repoPath, [
+          'rev-list',
+          '--count',
+          upstreamBranch + '..HEAD'
+        ])
+        aheadCount = parseInt(aheadResult.trim()) || 0
+      } catch (error) {
+        console.error(`检查 Git 领先远程状态失败 ${repoPath}:`, error)
+      }
     }
+  }
+
+  return {
+    isGitRepo: true,
+    hasUncommittedChanges,
+    isPushed: behindCount === 0 && aheadCount === 0,
+    aheadCount,
+    behindCount,
+    branch,
+    lastCommitMessage,
+    lastCommitDate: lastCommitDate ? new Date(lastCommitDate).toLocaleString('zh-CN') : undefined
   }
 }
 
@@ -407,9 +455,6 @@ ipcMain.handle('scanGitRepos', async (_, rootPath: string, includeRemote: boolea
         ...gitStatus
       })
     }
-
-    // 更新状态栏图标
-    updateTrayIcon(gitStatuses)
 
     return gitStatuses
   } catch (error) {
