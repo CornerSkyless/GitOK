@@ -143,6 +143,30 @@ body {
   letter-spacing: 0.3px;
 }
 
+.toolbar-refresh-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.toolbar-refresh-spinner {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 2px solid rgba(232, 79, 50, 0.25);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: refresh-spin 0.8s linear infinite;
+}
+
 /* 刷新按钮 */
 .refresh-btn {
   padding: 0.5rem 1.25rem;
@@ -161,6 +185,18 @@ body {
 .refresh-btn:hover {
   background: var(--accent-hover);
   box-shadow: 0 2px 8px rgba(232, 79, 50, 0.3);
+}
+
+.refresh-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  box-shadow: none;
+}
+
+@keyframes refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ===== 标题栏 ===== */

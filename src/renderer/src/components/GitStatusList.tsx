@@ -207,7 +207,7 @@ const GitStatusList: React.FC<GitStatusListProps> = ({ gitStatuses, isLoading })
     }
   }
 
-  if (isLoading) {
+  if (isLoading && gitStatuses.length === 0) {
     return (
       <div className="git-status-list">
         <div className="loading">正在检查 Git 状态...</div>
@@ -228,10 +228,17 @@ const GitStatusList: React.FC<GitStatusListProps> = ({ gitStatuses, isLoading })
 
     // 优先显示最重要的状态图标
     if (status.hasUncommittedChanges && (!status.isPushed || status.aheadCount > 0)) {
-      return <><HiExclamationTriangle size={18} style={{ color: 'var(--warning)' }} /><HiArrowUpCircle size={18} style={{ color: 'var(--accent)' }} /></> // 同时有更改和待推送
+      return (
+        <>
+          <HiExclamationTriangle size={18} style={{ color: 'var(--warning)' }} />
+          <HiArrowUpCircle size={18} style={{ color: 'var(--accent)' }} />
+        </>
+      ) // 同时有更改和待推送
     }
-    if (status.hasUncommittedChanges) return <HiExclamationTriangle size={18} style={{ color: 'var(--warning)' }} />
-    if (!status.isPushed || status.aheadCount > 0) return <HiArrowUpCircle size={18} style={{ color: 'var(--accent)' }} />
+    if (status.hasUncommittedChanges)
+      return <HiExclamationTriangle size={18} style={{ color: 'var(--warning)' }} />
+    if (!status.isPushed || status.aheadCount > 0)
+      return <HiArrowUpCircle size={18} style={{ color: 'var(--accent)' }} />
     if (status.behindCount > 0) return <HiArrowDown size={18} style={{ color: 'var(--warning)' }} />
     return <HiCheckCircle size={18} style={{ color: 'var(--success)' }} />
   }

@@ -84,7 +84,11 @@ function App(): React.JSX.Element {
   }
 
   const scanGitRepos = useCallback(
-    async (directory: string, includeRemote: boolean = true): Promise<void> => {
+    async (
+      directory: string,
+      includeRemote: boolean = true,
+      preserveExistingStatuses: boolean = true
+    ): Promise<void> => {
       try {
         setIsLoading(true)
         const statuses = await window.api.scanGitRepos(directory, includeRemote)
@@ -93,7 +97,9 @@ function App(): React.JSX.Element {
         calculateNextCheckTime()
       } catch (error) {
         console.error('扫描 Git 仓库失败:', error)
-        setGitStatuses([])
+        if (!preserveExistingStatuses) {
+          setGitStatuses([])
+        }
       } finally {
         setIsLoading(false)
       }
@@ -158,7 +164,7 @@ function App(): React.JSX.Element {
       // 保存目录到localStorage
       if (newDirectory) {
         window.api.saveConfig('selectedDirectory', newDirectory)
-        await scanGitRepos(newDirectory, true)
+        await scanGitRepos(newDirectory, true, false)
         if (autoCheckEnabled) {
           startAutoCheck()
         }
@@ -208,11 +214,15 @@ function App(): React.JSX.Element {
               </span>
             </div>
             <div className="toolbar-right">
-              {autoCheckEnabled && (
-                <span className="toolbar-auto-indicator">自动检查已开启</span>
+              {isLoading && (
+                <span className="toolbar-refresh-indicator" aria-live="polite">
+                  <span className="toolbar-refresh-spinner" aria-hidden="true" />
+                  刷新中...
+                </span>
               )}
-              <button onClick={refreshStatus} className="refresh-btn">
-                刷新状态
+              {autoCheckEnabled && <span className="toolbar-auto-indicator">自动检查已开启</span>}
+              <button onClick={refreshStatus} className="refresh-btn" disabled={isLoading}>
+                {isLoading ? '正在刷新' : '刷新状态'}
               </button>
             </div>
           </div>
