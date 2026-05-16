@@ -1,0 +1,46 @@
+/* 全局壳层：标题栏 + 填满剩余高度的主体
+ * 锁定视口高度，避免整页滚动；各栏在内部各自 overflow。 */
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+.app {
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-app);
+}
+
+.app-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 空状态占位（无监听目录） */
+.repo-workspace-gitok__empty-app {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+}
+
+.repo-workspace-gitok__empty-app-inner {
+  max-width: 360px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.repo-workspace-gitok__empty-app-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}

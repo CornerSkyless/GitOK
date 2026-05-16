@@ -93,7 +93,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* 目录配置 */}
           <section className="settings-section">
             <h3>监听目录</h3>
-            <p className="settings-section-desc">选择要监听的目录，将扫描其下一级子文件夹的 Git 状态</p>
+            <p className="settings-section-desc">
+              选择要监听的目录，将扫描其下一级子文件夹的 Git 状态
+            </p>
             <div className="settings-directory-controls">
               <input
                 type="text"
@@ -158,7 +160,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               {updateResult && !updateResult.hasError && (
                 <div className="settings-update-result">
                   <div className="settings-update-versions">
-                    <span className="settings-version-tag">当前版本: v{updateResult.currentVersion}</span>
+                    <span className="settings-version-tag">
+                      当前版本: v{updateResult.currentVersion}
+                    </span>
                     <span className="settings-version-arrow">→</span>
                     <span
                       className={`settings-version-tag ${updateResult.hasUpdate ? 'settings-version-tag--new' : 'settings-version-tag--latest'}`}
@@ -187,9 +191,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               )}
 
               {updateResult?.hasError && (
-                <div className="settings-update-error">
-                  检查更新失败: {updateResult.error}
-                </div>
+                <div className="settings-update-error">检查更新失败: {updateResult.error}</div>
               )}
             </div>
           </section>
