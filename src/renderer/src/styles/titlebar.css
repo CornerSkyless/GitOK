@@ -1,0 +1,136 @@
+/* 与主界面同色的顶栏：无磨砂条、弱分割，避免「贴了一条玻璃」的突兀感 */
+
+.titlebar {
+  height: 38px;
+  width: 100%;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 100;
+  background: var(--bg-app);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.titlebar--mac {
+  display: block;
+}
+
+.titlebar--win {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+}
+
+.titlebar-drag {
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.titlebar-content {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.titlebar--mac .titlebar-content {
+  justify-content: center;
+  padding: 0 18px;
+}
+
+.titlebar--win .titlebar-content--left {
+  padding-left: 14px;
+  min-width: 0;
+}
+
+.titlebar-traffic-light-spacer {
+  width: 72px;
+  flex-shrink: 0;
+}
+
+.titlebar-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-secondary);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.titlebar--win .titlebar-title {
+  text-align: left;
+  justify-content: flex-start;
+}
+
+.titlebar-version {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+}
+
+.titlebar-settings-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-settings-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.titlebar-settings-btn--win {
+  margin-left: 8px;
+}
+
+.titlebar-settings-spacer {
+  display: flex !important;
+  justify-content: flex-end;
+}
+
+.titlebar-controls {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.titlebar-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.titlebar-control:hover {
+  background: var(--bg-active-row);
+  color: var(--text-primary);
+}
+
+.titlebar-control + .titlebar-control {
+  border-left: 1px solid var(--border-subtle);
+}
+
+.titlebar-control--close:hover {
+  background: rgba(225, 29, 72, 0.92);
+  color: #fff;
+}

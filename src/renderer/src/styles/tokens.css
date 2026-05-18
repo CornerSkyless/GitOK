@@ -1,0 +1,49 @@
+/* GitOK · 亮色界面设计令牌（参考现代密码管理器式布局） */
+
+:root {
+  --font-sans:
+    ui-sans-serif, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto,
+    'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  --bg-app: #ebeff4;
+  --bg-surface: #ffffff;
+  --bg-sidebar: #e8ecf1;
+  --bg-muted: #f4f6f9;
+  --bg-hover: rgba(10, 108, 255, 0.07);
+  --bg-active-row: rgba(0, 0, 0, 0.04);
+  --bg-selected-row: rgba(10, 108, 255, 0.1);
+
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-tertiary: #9ca3af;
+
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --border-subtle: #eef0f4;
+
+  --accent: #0a6cff;
+  --accent-hover: #0053d9;
+  --accent-soft: rgba(10, 108, 255, 0.12);
+
+  --success: #0d7d3f;
+  --success-bg: #ecfdf3;
+
+  --danger: #be123c;
+  --danger-bg: #fef2f2;
+
+  --warning: #b45309;
+  --warning-bg: #fffbeb;
+
+  --neutral-icon: #6b7280;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+
+  /* 与 --bg-app 一致，用于标题栏、图标填充等，避免与主内容区割裂 */
+  --titlebar-bg: var(--bg-app);
+}

@@ -102,8 +102,12 @@ function createWindow(): void {
     title: 'GitOK',
     ...(process.platform === 'darwin'
       ? {
+          /** 透明画布 + Vibrancy → 内容由 CSS 不透明区域镂空，左栏透出系统 NSVisualEffectView */
+          transparent: true,
+          vibrancy: 'sidebar',
+          visualEffectState: 'followWindow',
           titleBarStyle: 'hidden',
-          trafficLightPosition: { x: 12, y: 12 }
+          trafficLightPosition: { x: 12, y: 11 }
         }
       : {
           frame: false

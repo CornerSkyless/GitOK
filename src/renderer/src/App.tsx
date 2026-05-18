@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import GitStatusList, { GitStatus } from './components/GitStatusList'
+import { GitStatusWorkspace, type GitStatus } from './components/git/GitStatusWorkspace'
 import TitleBar from './components/TitleBar'
 import SettingsModal from './components/SettingsModal'
 import './assets/main.css'
@@ -31,6 +31,16 @@ function App(): React.JSX.Element {
   const remoteCheckTimerRef = useRef<NodeJS.Timeout | null>(null)
   const lastRemoteCheckRef = useRef<Date | null>(null)
   const scanRequestIdRef = useRef(0)
+
+  // macOS：为原生侧边栏 Vibrancy（Electron）挂上 html class，参见 mac-vibrancy-sidebar.css
+  useEffect(() => {
+    if (window.api.windowControls.getPlatform() !== 'darwin') return
+    const root = document.documentElement
+    root.classList.add('gitok-mac-vibrancy-sidebar')
+    return (): void => {
+      root.classList.remove('gitok-mac-vibrancy-sidebar')
+    }
+  }, [])
 
   // 加载保存的配置
   useEffect(() => {
@@ -212,36 +222,27 @@ function App(): React.JSX.Element {
   return (
     <div className="app">
       <TitleBar onOpenSettings={() => setShowSettings(true)} hasUpdate={hasUpdate} />
-      <header className="app-header">
-        <h1>GitOK - Git 状态监控器</h1>
-        <p>监控本地目录下一级子文件夹的 Git 状态</p>
-      </header>
 
-      <main className="app-main">
-        {currentDirectory && (
-          <div className="toolbar">
-            <div className="toolbar-left">
-              <span className="toolbar-current-dir" title={currentDirectory}>
-                {currentDirectory}
-              </span>
-            </div>
-            <div className="toolbar-right">
-              {isLoading && (
-                <span className="toolbar-refresh-indicator" aria-live="polite">
-                  <span className="toolbar-refresh-spinner" aria-hidden="true" />
-                  刷新中...
-                </span>
-              )}
-              {autoCheckEnabled && <span className="toolbar-auto-indicator">自动检查已开启</span>}
-              <button onClick={refreshStatus} className="refresh-btn" disabled={isLoading}>
-                {isLoading ? '正在刷新' : '刷新状态'}
-              </button>
+      <div className="app-body">
+        {!currentDirectory ? (
+          <div className="repo-workspace-gitok__empty-app">
+            <div className="repo-workspace-gitok__empty-app-inner">
+              <p className="repo-workspace-gitok__empty-app-title">尚未选择监听目录</p>
+              <p>
+                点击右上角「设置」，选择包含多个仓库的上级文件夹，GitOK 会扫描其子目录的一级项目。
+              </p>
             </div>
           </div>
+        ) : (
+          <GitStatusWorkspace
+            gitStatuses={gitStatuses}
+            isLoading={isLoading}
+            watchRootPath={currentDirectory}
+            autoCheckEnabled={autoCheckEnabled}
+            onRefresh={refreshStatus}
+          />
         )}
-
-        <GitStatusList gitStatuses={gitStatuses} isLoading={isLoading} />
-      </main>
+      </div>
 
       <SettingsModal
         open={showSettings}
