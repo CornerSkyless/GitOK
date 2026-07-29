@@ -13,6 +13,8 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { spawn } from 'child_process'
 import { readdir, stat } from 'fs/promises'
+import { getGitFileDiff, getGitWorkingTreeChanges } from './gitChanges'
+import type { GitChangeScope } from '../shared/gitChanges'
 
 let tray: Tray | null = null
 let mainWindow: BrowserWindow | null = null
@@ -479,6 +481,17 @@ ipcMain.handle('scanGitRepos', async (_, rootPath: string, includeRemote: boolea
     throw error
   }
 })
+
+ipcMain.handle('getGitWorkingTreeChanges', async (_, repoPath: string) => {
+  return getGitWorkingTreeChanges(repoPath)
+})
+
+ipcMain.handle(
+  'getGitFileDiff',
+  async (_, repoPath: string, filePath: string, scope: GitChangeScope) => {
+    return getGitFileDiff(repoPath, filePath, scope)
+  }
+)
 
 // 窗口控制 IPC 处理器
 ipcMain.handle('window-minimize', () => {

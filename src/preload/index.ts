@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import type { GitChangeScope } from '../shared/gitChanges'
 
 // Custom APIs for renderer
 const api = {
@@ -16,6 +17,22 @@ const api = {
       return await ipcRenderer.invoke('scanGitRepos', rootPath, includeRemote)
     } catch (error) {
       console.error('Preload scanGitRepos error:', error)
+      throw error
+    }
+  },
+  getGitWorkingTreeChanges: async (repoPath: string) => {
+    try {
+      return await ipcRenderer.invoke('getGitWorkingTreeChanges', repoPath)
+    } catch (error) {
+      console.error('Preload getGitWorkingTreeChanges error:', error)
+      throw error
+    }
+  },
+  getGitFileDiff: async (repoPath: string, filePath: string, scope: GitChangeScope) => {
+    try {
+      return await ipcRenderer.invoke('getGitFileDiff', repoPath, filePath, scope)
+    } catch (error) {
+      console.error('Preload getGitFileDiff error:', error)
       throw error
     }
   },

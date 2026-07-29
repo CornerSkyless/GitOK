@@ -1,4 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
+import type { GitChangedFile, GitChangeScope, GitFileDiffResult } from '../shared/gitChanges'
 
 interface GitStatus {
   path: string
@@ -25,6 +26,12 @@ interface WindowControls {
 interface CustomAPI {
   selectDirectory: () => Promise<{ canceled: boolean; filePaths: string[] }>
   scanGitRepos: (rootPath: string, includeRemote?: boolean) => Promise<GitStatus[]>
+  getGitWorkingTreeChanges: (repoPath: string) => Promise<GitChangedFile[]>
+  getGitFileDiff: (
+    repoPath: string,
+    filePath: string,
+    scope: GitChangeScope
+  ) => Promise<GitFileDiffResult>
   updateTrayIcon: (
     gitStatuses: Array<{
       isGitRepo: boolean
