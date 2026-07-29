@@ -1,6 +1,6 @@
 /**
  * macOS：配合主进程 BrowserWindow `{ transparent: true, vibrancy: 'sidebar' }`，
- * 仅左栏等区域保持透明即可透出原生 NSVisualEffectView（Electron 封装）。
+ * 左栏使用主题色半透明覆盖层，既保留原生 NSVisualEffectView，又避免墙纸色调与界面冲突。
  * 由 App 挂载时在 `<html>` 上添加 `.gitok-mac-vibrancy-sidebar`。
  */
 
@@ -20,12 +20,12 @@ html.gitok-mac-vibrancy-sidebar .git-workspace {
 }
 
 html.gitok-mac-vibrancy-sidebar .git-workspace__sidebar {
-  background: transparent !important;
-  border-right-color: rgba(60, 60, 67, 0.12);
+  background: var(--bg-sidebar-vibrancy) !important;
+  border-right-color: var(--vibrancy-border);
 }
 
 html.gitok-mac-vibrancy-sidebar .git-workspace__brand-sub {
-  border-bottom-color: rgba(60, 60, 67, 0.12);
+  border-bottom-color: var(--vibrancy-border);
 }
 
 /* 无主目录占位：底板透明时给卡片垫上实色保证可读 */
@@ -35,14 +35,4 @@ html.gitok-mac-vibrancy-sidebar .repo-workspace-gitok__empty-app-inner {
   border-radius: var(--radius-lg);
   padding: 28px 32px;
   box-shadow: var(--shadow-md);
-}
-
-@media (prefers-color-scheme: dark) {
-  html.gitok-mac-vibrancy-sidebar .git-workspace__sidebar {
-    border-right-color: rgba(235, 235, 245, 0.12);
-  }
-
-  html.gitok-mac-vibrancy-sidebar .git-workspace__brand-sub {
-    border-bottom-color: rgba(235, 235, 245, 0.12);
-  }
 }

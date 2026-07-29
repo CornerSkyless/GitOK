@@ -131,6 +131,6 @@
 }
 
 .titlebar-control--close:hover {
-  background: rgba(225, 29, 72, 0.92);
-  color: #fff;
+  background: var(--danger-solid);
+  color: var(--text-on-danger);
 }

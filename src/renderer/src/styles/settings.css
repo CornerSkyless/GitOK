@@ -1,7 +1,7 @@
 .settings-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(17, 24, 39, 0.45);
+  background: var(--overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -131,7 +131,7 @@
 .settings-btn-primary {
   padding: 8px 16px;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   border: none;
   border-radius: var(--radius-md);
   font-size: 13px;
@@ -145,13 +145,13 @@
 
 .settings-btn-primary:hover {
   background: var(--accent-hover);
-  box-shadow: 0 2px 8px rgba(10, 108, 255, 0.28);
+  box-shadow: 0 2px 8px var(--accent-shadow);
 }
 
 .settings-select-btn {
   padding: 8px 16px;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   border: none;
   border-radius: var(--radius-md);
   font-size: 13px;
@@ -165,7 +165,7 @@
 
 .settings-select-btn:hover {
   background: var(--accent-hover);
-  box-shadow: 0 2px 8px rgba(10, 108, 255, 0.28);
+  box-shadow: 0 2px 8px var(--accent-shadow);
 }
 
 .settings-current-path {
@@ -206,13 +206,13 @@
 
 .settings-auto-check-btn.disabled {
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   border: 1px solid transparent;
 }
 
 .settings-auto-check-btn.disabled:hover {
   background: var(--accent-hover);
-  box-shadow: 0 2px 8px rgba(10, 108, 255, 0.28);
+  box-shadow: 0 2px 8px var(--accent-shadow);
 }
 
 .settings-check-status {
@@ -239,7 +239,7 @@
 .settings-update-btn {
   padding: 8px 16px;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   border: none;
   border-radius: var(--radius-md);
   font-size: 13px;
@@ -315,7 +315,7 @@
   display: inline-block;
   padding: 6px 12px;
   background: var(--accent);
-  color: #fff;
+  color: var(--text-on-accent);
   border-radius: var(--radius-md);
   font-size: 12px;
   font-weight: 600;
@@ -336,7 +336,7 @@
   font-size: 12px;
   color: var(--danger);
   background: var(--danger-bg);
-  border: 1px solid rgba(190, 18, 60, 0.2);
+  border: 1px solid var(--danger-border);
   border-radius: var(--radius-md);
   padding: 8px 12px;
 }

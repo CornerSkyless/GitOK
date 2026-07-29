@@ -1,4 +1,14 @@
-import { app, shell, BrowserWindow, ipcMain, dialog, Tray, Menu, nativeImage } from 'electron'
+import {
+  app,
+  shell,
+  BrowserWindow,
+  ipcMain,
+  dialog,
+  Tray,
+  Menu,
+  nativeImage,
+  nativeTheme
+} from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { spawn } from 'child_process'
@@ -157,6 +167,9 @@ function createWindow(): void {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  // Keep Chromium, native window controls, and macOS vibrancy in sync with the OS appearance.
+  nativeTheme.themeSource = 'system'
+
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.gitok.app')
 

@@ -1,6 +1,6 @@
 {
   "name": "gitok",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "GitOK - 一个用于监控本地目录下所有项目 Git 状态的 Electron 应用",
   "main": "./out/main/index.js",
   "author": "geestack.com",

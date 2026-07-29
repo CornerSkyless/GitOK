@@ -1,6 +1,8 @@
-/* GitOK · 亮色界面设计令牌（参考现代密码管理器式布局） */
+/* GitOK · 跟随系统外观的界面设计令牌 */
 
 :root {
+  color-scheme: light dark;
+
   --font-sans:
     ui-sans-serif, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto,
     'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif;
@@ -9,28 +11,38 @@
   --bg-app: #ebeff4;
   --bg-surface: #ffffff;
   --bg-sidebar: #e8ecf1;
+  --bg-sidebar-vibrancy: transparent;
   --bg-muted: #f4f6f9;
   --bg-hover: rgba(10, 108, 255, 0.07);
   --bg-active-row: rgba(0, 0, 0, 0.04);
   --bg-selected-row: rgba(10, 108, 255, 0.1);
+  --bg-nav-count: rgba(255, 255, 255, 0.6);
+  --overlay-bg: rgba(17, 24, 39, 0.45);
 
   --text-primary: #111827;
   --text-secondary: #4b5563;
   --text-tertiary: #9ca3af;
+  --text-on-accent: #ffffff;
+  --text-on-danger: #ffffff;
 
   --border: #e5e7eb;
   --border-strong: #d1d5db;
   --border-subtle: #eef0f4;
+  --vibrancy-border: rgba(60, 60, 67, 0.12);
 
   --accent: #0a6cff;
   --accent-hover: #0053d9;
   --accent-soft: rgba(10, 108, 255, 0.12);
+  --accent-shadow: rgba(10, 108, 255, 0.28);
+  --spinner-track: rgba(10, 108, 255, 0.2);
 
   --success: #0d7d3f;
   --success-bg: #ecfdf3;
 
   --danger: #be123c;
   --danger-bg: #fef2f2;
+  --danger-border: rgba(190, 18, 60, 0.2);
+  --danger-solid: rgba(225, 29, 72, 0.92);
 
   --warning: #b45309;
   --warning-bg: #fffbeb;
@@ -46,4 +58,51 @@
 
   /* 与 --bg-app 一致，用于标题栏、图标填充等，避免与主内容区割裂 */
   --titlebar-bg: var(--bg-app);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-app: #11151b;
+    --bg-surface: #171c24;
+    --bg-sidebar: #141920;
+    --bg-sidebar-vibrancy: rgba(17, 21, 27, 0.88);
+    --bg-muted: #20262f;
+    --bg-hover: rgba(88, 166, 255, 0.12);
+    --bg-active-row: rgba(255, 255, 255, 0.06);
+    --bg-selected-row: rgba(88, 166, 255, 0.16);
+    --bg-nav-count: rgba(255, 255, 255, 0.08);
+    --overlay-bg: rgba(0, 0, 0, 0.62);
+
+    --text-primary: #f3f4f6;
+    --text-secondary: #b7c0cc;
+    --text-tertiary: #8994a3;
+    --text-on-accent: #07111f;
+
+    --border: #2b333e;
+    --border-strong: #3d4755;
+    --border-subtle: #232a33;
+    --vibrancy-border: rgba(235, 235, 245, 0.12);
+
+    --accent: #58a6ff;
+    --accent-hover: #79b8ff;
+    --accent-soft: rgba(88, 166, 255, 0.16);
+    --accent-shadow: rgba(88, 166, 255, 0.25);
+    --spinner-track: rgba(88, 166, 255, 0.24);
+
+    --success: #4ade80;
+    --success-bg: rgba(74, 222, 128, 0.14);
+
+    --danger: #fb7185;
+    --danger-bg: rgba(251, 113, 133, 0.14);
+    --danger-border: rgba(251, 113, 133, 0.28);
+    --danger-solid: #be123c;
+
+    --warning: #fbbf24;
+    --warning-bg: rgba(251, 191, 36, 0.14);
+
+    --neutral-icon: #a1aab8;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24);
+    --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.38);
+  }
 }
