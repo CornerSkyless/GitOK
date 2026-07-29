@@ -1,7 +1,6 @@
-import { mkdtemp, rm, writeFile } from 'fs/promises'
+import { mkdtemp, rm, symlink, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { parseDiff } from 'react-diff-view'
 import { simpleGit, type SimpleGit } from 'simple-git'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import type { GitChangeScope } from '../shared/gitChanges'
@@ -71,26 +70,43 @@ describe('Git working tree changes', () => {
       ])
     )
 
-    const cases: Array<{ path: string; scope: GitChangeScope; expected: string }> = [
-      { path: 'tracked.txt', scope: 'unstaged', expected: '+after' },
+    const cases: Array<{
+      path: string
+      scope: GitChangeScope
+      original: string
+      modified: string
+    }> = [
+      {
+        path: 'tracked.txt',
+        scope: 'unstaged',
+        original: 'before\n',
+        modified: 'before\nafter\n'
+      },
       {
         path: 'staged-and-modified.txt',
         scope: 'staged',
-        expected: '+staged version'
+        original: '',
+        modified: 'staged version\n'
       },
       {
         path: 'staged-and-modified.txt',
         scope: 'unstaged',
-        expected: '+working tree version'
+        original: 'staged version\n',
+        modified: 'staged version\nworking tree version\n'
       },
-      { path: '中文 file.txt', scope: 'untracked', expected: '+未跟踪内容' }
+      {
+        path: '中文 file.txt',
+        scope: 'untracked',
+        original: '',
+        modified: '未跟踪内容\n'
+      }
     ]
 
     for (const testCase of cases) {
       const result = await getGitFileDiff(repositoryPath, testCase.path, testCase.scope)
       expect(result.error).toBeUndefined()
-      expect(result.patch).toContain(testCase.expected)
-      expect(parseDiff(result.patch).length).toBeGreaterThan(0)
+      expect(result.originalContent).toBe(testCase.original)
+      expect(result.modifiedContent).toBe(testCase.modified)
     }
   })
 
@@ -125,6 +141,21 @@ describe('Git working tree changes', () => {
     const binaryDiff = await getGitFileDiff(repositoryPath, 'binary.dat', 'untracked')
     expect(binaryDiff.error).toBeUndefined()
     expect(binaryDiff.isBinary).toBe(true)
+
+    const renamedDiff = await getGitFileDiff(
+      repositoryPath,
+      'renamed.txt',
+      'staged',
+      'rename-me.txt'
+    )
+    expect(renamedDiff.error).toBeUndefined()
+    expect(renamedDiff.originalContent).toBe('rename content\n')
+    expect(renamedDiff.modifiedContent).toBe('rename content\n')
+
+    const deletedDiff = await getGitFileDiff(repositoryPath, 'delete-me.txt', 'staged')
+    expect(deletedDiff.error).toBeUndefined()
+    expect(deletedDiff.originalContent).toBe('delete content\n')
+    expect(deletedDiff.modifiedContent).toBe('')
   })
 
   it('supports repositories without a HEAD commit', async () => {
@@ -150,16 +181,38 @@ describe('Git working tree changes', () => {
 
       const diff = await getGitFileDiff(emptyRepository, 'staged.txt', 'staged')
       expect(diff.error).toBeUndefined()
-      expect(diff.patch).toContain('+first commit content')
-      expect(parseDiff(diff.patch)).toHaveLength(1)
+      expect(diff.originalContent).toBe('')
+      expect(diff.modifiedContent).toBe('first commit content\n')
     } finally {
       await rm(emptyRepository, { recursive: true, force: true })
     }
   })
 
+  it.skipIf(process.platform === 'win32')(
+    'reads symbolic-link text without following its target',
+    async () => {
+      await symlink('tracked.txt', join(repositoryPath, 'tracked-link.txt'))
+
+      const diff = await getGitFileDiff(repositoryPath, 'tracked-link.txt', 'untracked')
+
+      expect(diff.error).toBeUndefined()
+      expect(diff.isBinary).toBe(false)
+      expect(diff.originalContent).toBe('')
+      expect(diff.modifiedContent).toBe('tracked.txt')
+    }
+  )
+
   it('rejects paths outside the repository and unknown scopes', async () => {
     const outside = await getGitFileDiff(repositoryPath, '../outside.txt', 'unstaged')
     expect(outside.error).toContain('超出 Git 仓库范围')
+
+    const previousOutside = await getGitFileDiff(
+      repositoryPath,
+      'tracked.txt',
+      'staged',
+      '../outside.txt'
+    )
+    expect(previousOutside.error).toContain('超出 Git 仓库范围')
 
     const unknownScope = await getGitFileDiff(
       repositoryPath,
@@ -171,12 +224,13 @@ describe('Git working tree changes', () => {
 
   it('returns safe states for oversized output and timeouts', async () => {
     await writeFile(join(repositoryPath, 'large.txt'), 'x'.repeat(8 * 1024))
-    const largeDiff = await getGitFileDiff(repositoryPath, 'large.txt', 'untracked', {
+    const largeDiff = await getGitFileDiff(repositoryPath, 'large.txt', 'untracked', undefined, {
       maxBytes: 512,
       timeoutMs: 10_000
     })
     expect(largeDiff.tooLarge).toBe(true)
-    expect(largeDiff.patch).toBe('')
+    expect(largeDiff.originalContent).toBe('')
+    expect(largeDiff.modifiedContent).toBe('')
 
     const timedOut = await runGitCommandWithLimits(repositoryPath, ['hash-object', '--stdin'], {
       maxBytes: 1024,

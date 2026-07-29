@@ -30,7 +30,8 @@ interface CustomAPI {
   getGitFileDiff: (
     repoPath: string,
     filePath: string,
-    scope: GitChangeScope
+    scope: GitChangeScope,
+    previousPath?: string
   ) => Promise<GitFileDiffResult>
   updateTrayIcon: (
     gitStatuses: Array<{

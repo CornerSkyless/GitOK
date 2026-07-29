@@ -20,7 +20,8 @@ export interface GitChangedFile {
 export interface GitFileDiffResult {
   path: string
   scope: GitChangeScope
-  patch: string
+  originalContent: string
+  modifiedContent: string
   isBinary: boolean
   tooLarge: boolean
   error?: string

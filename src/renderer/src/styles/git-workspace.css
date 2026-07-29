@@ -846,47 +846,18 @@
 }
 
 .git-workspace__diff-shell {
-  --diff-background-color: var(--bg-surface);
-  --diff-text-color: var(--text-primary);
-  --diff-font-family: var(--font-mono);
-  --diff-selection-background-color: rgba(10, 108, 255, 0.24);
-  --diff-selection-text-color: var(--text-primary);
-  --diff-gutter-insert-background-color: #dcfce7;
-  --diff-gutter-insert-text-color: #166534;
-  --diff-gutter-delete-background-color: #ffe4e6;
-  --diff-gutter-delete-text-color: #9f1239;
-  --diff-code-insert-background-color: #f0fdf4;
-  --diff-code-insert-text-color: #14532d;
-  --diff-code-delete-background-color: #fff1f2;
-  --diff-code-delete-text-color: #881337;
-  --diff-code-insert-edit-background-color: #bbf7d0;
-  --diff-code-insert-edit-text-color: #14532d;
-  --diff-code-delete-edit-background-color: #fecdd3;
-  --diff-code-delete-edit-text-color: #881337;
   min-height: 210px;
-  overflow-x: auto;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   background: var(--bg-surface);
 }
 
-.git-workspace__diff-shell .diff {
-  min-width: 520px;
-  font-size: 11px;
-}
-
-.git-workspace__diff-shell .diff + .diff {
-  border-top: 1px solid var(--border);
-}
-
-.git-workspace__diff-shell .diff-gutter {
-  color: var(--text-tertiary);
-  border-right: 1px solid var(--border-subtle);
-}
-
-.git-workspace__diff-shell .diff-code {
-  padding-top: 1px;
-  padding-bottom: 1px;
+.git-workspace__monaco-diff {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--bg-surface);
 }
 
 .git-workspace__changes-message {
@@ -928,24 +899,6 @@
 
 .git-workspace__changes-retry:hover {
   border-color: var(--accent);
-}
-
-@media (prefers-color-scheme: dark) {
-  .git-workspace__diff-shell {
-    --diff-selection-background-color: rgba(88, 166, 255, 0.32);
-    --diff-gutter-insert-background-color: rgba(34, 197, 94, 0.18);
-    --diff-gutter-insert-text-color: #86efac;
-    --diff-gutter-delete-background-color: rgba(244, 63, 94, 0.18);
-    --diff-gutter-delete-text-color: #fda4af;
-    --diff-code-insert-background-color: rgba(34, 197, 94, 0.1);
-    --diff-code-insert-text-color: #dcfce7;
-    --diff-code-delete-background-color: rgba(244, 63, 94, 0.1);
-    --diff-code-delete-text-color: #ffe4e6;
-    --diff-code-insert-edit-background-color: rgba(34, 197, 94, 0.35);
-    --diff-code-insert-edit-text-color: #f0fdf4;
-    --diff-code-delete-edit-background-color: rgba(244, 63, 94, 0.35);
-    --diff-code-delete-edit-text-color: #fff1f2;
-  }
 }
 
 @media (max-width: 840px) {

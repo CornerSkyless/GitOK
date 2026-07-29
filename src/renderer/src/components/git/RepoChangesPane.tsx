@@ -1,14 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Diff,
-  Hunk,
-  markEdits,
-  parseDiff,
-  tokenize,
-  type FileData,
-  type ViewType
-} from 'react-diff-view'
-import {
   HiOutlineArrowPath,
   HiOutlineArrowsRightLeft,
   HiOutlineDocumentText,
@@ -21,7 +12,10 @@ import type {
   GitFileDiffResult
 } from '../../../../shared/gitChanges'
 import type { GitStatus } from './types'
-import 'react-diff-view/style/index.css'
+
+const MonacoDiffEditor = React.lazy(() => import('./MonacoDiffEditor'))
+
+type DiffViewType = 'split' | 'unified'
 
 interface RepoChangesPaneProps {
   repo: GitStatus
@@ -63,36 +57,6 @@ function getChangeKey(change: GitChangedFile): string {
   return `${change.scope}:${change.path}`
 }
 
-function DiffFileView({
-  file,
-  viewType
-}: {
-  file: FileData
-  viewType: ViewType
-}): React.JSX.Element {
-  const tokens = useMemo(
-    () =>
-      tokenize(file.hunks, {
-        enhancers: [markEdits(file.hunks, { type: 'line' })]
-      }),
-    [file.hunks]
-  )
-
-  return (
-    <Diff
-      diffType={file.type}
-      hunks={file.hunks}
-      viewType={viewType}
-      tokens={tokens}
-      optimizeSelection
-    >
-      {(hunks) =>
-        hunks.map((hunk) => <Hunk key={`${hunk.content}:${hunk.oldStart}`} hunk={hunk} />)
-      }
-    </Diff>
-  )
-}
-
 export function RepoChangesPane({ repo, onChangeCount }: RepoChangesPaneProps): React.JSX.Element {
   const [changes, setChanges] = useState<GitChangedFile[]>([])
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
@@ -101,7 +65,7 @@ export function RepoChangesPane({ repo, onChangeCount }: RepoChangesPaneProps): 
   const [isLoadingDiff, setIsLoadingDiff] = useState(false)
   const [changesError, setChangesError] = useState<string | null>(null)
   const [diffRequestVersion, setDiffRequestVersion] = useState(0)
-  const [viewType, setViewType] = useState<ViewType>('split')
+  const [viewType, setViewType] = useState<DiffViewType>('split')
   const changesRequestRef = useRef(0)
   const diffRequestRef = useRef(0)
 
@@ -161,7 +125,12 @@ export function RepoChangesPane({ repo, onChangeCount }: RepoChangesPaneProps): 
     setIsLoadingDiff(true)
 
     void window.api
-      .getGitFileDiff(repo.path, selectedChange.path, selectedChange.scope)
+      .getGitFileDiff(
+        repo.path,
+        selectedChange.path,
+        selectedChange.scope,
+        selectedChange.previousPath
+      )
       .then((result) => {
         if (requestId === diffRequestRef.current) {
           setDiffResult(result)
@@ -172,7 +141,8 @@ export function RepoChangesPane({ repo, onChangeCount }: RepoChangesPaneProps): 
         setDiffResult({
           path: selectedChange.path,
           scope: selectedChange.scope,
-          patch: '',
+          originalContent: '',
+          modifiedContent: '',
           isBinary: false,
           tooLarge: false,
           error: error instanceof Error ? error.message : '无法读取文件差异'
@@ -200,24 +170,6 @@ export function RepoChangesPane({ repo, onChangeCount }: RepoChangesPaneProps): 
       ),
     [changes]
   )
-
-  const parsedDiff = useMemo(() => {
-    if (!diffResult?.patch || diffResult.isBinary || diffResult.tooLarge || diffResult.error) {
-      return { files: [] as FileData[], error: null as string | null }
-    }
-
-    try {
-      return {
-        files: parseDiff(diffResult.patch, { nearbySequences: 'zip' }),
-        error: null
-      }
-    } catch {
-      return {
-        files: [] as FileData[],
-        error: 'Git 已返回差异，但当前渲染器无法解析该格式'
-      }
-    }
-  }, [diffResult])
 
   const renderDiffState = (): React.ReactNode => {
     if (isLoadingDiff) {
@@ -250,12 +202,12 @@ export function RepoChangesPane({ repo, onChangeCount }: RepoChangesPaneProps): 
       )
     }
 
-    if (diffResult.error || parsedDiff.error) {
+    if (diffResult.error) {
       return (
         <div className="git-workspace__changes-message">
           <HiOutlineExclamationTriangle size={28} aria-hidden />
           <strong>无法显示差异</strong>
-          <span>{diffResult.error || parsedDiff.error}</span>
+          <span>{diffResult.error}</span>
           <button
             type="button"
             className="git-workspace__changes-retry"
@@ -277,10 +229,7 @@ export function RepoChangesPane({ repo, onChangeCount }: RepoChangesPaneProps): 
       )
     }
 
-    if (
-      parsedDiff.files.length === 0 ||
-      parsedDiff.files.every((file) => file.hunks.length === 0)
-    ) {
+    if (diffResult.originalContent === diffResult.modifiedContent) {
       return (
         <div className="git-workspace__changes-message">
           <HiOutlineDocumentText size={28} aria-hidden />
@@ -290,13 +239,27 @@ export function RepoChangesPane({ repo, onChangeCount }: RepoChangesPaneProps): 
       )
     }
 
-    return parsedDiff.files.map((file, index) => (
-      <DiffFileView
-        key={`${file.oldPath}:${file.newPath}:${index}`}
-        file={file}
-        viewType={viewType}
-      />
-    ))
+    return (
+      <React.Suspense
+        fallback={
+          <div className="git-workspace__changes-message">
+            <span className="git-workspace__spinner" aria-hidden />
+            正在加载代码差异编辑器…
+          </div>
+        }
+      >
+        <MonacoDiffEditor
+          key={`${selectedChange.scope}:${selectedChange.previousPath ?? ''}:${selectedChange.path}`}
+          repoPath={repo.path}
+          filePath={selectedChange.path}
+          previousPath={selectedChange.scope === 'staged' ? selectedChange.previousPath : undefined}
+          scope={selectedChange.scope}
+          originalContent={diffResult.originalContent}
+          modifiedContent={diffResult.modifiedContent}
+          viewType={viewType}
+        />
+      </React.Suspense>
+    )
   }
 
   if (isLoadingChanges && changes.length === 0) {

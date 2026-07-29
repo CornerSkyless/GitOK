@@ -488,8 +488,8 @@ ipcMain.handle('getGitWorkingTreeChanges', async (_, repoPath: string) => {
 
 ipcMain.handle(
   'getGitFileDiff',
-  async (_, repoPath: string, filePath: string, scope: GitChangeScope) => {
-    return getGitFileDiff(repoPath, filePath, scope)
+  async (_, repoPath: string, filePath: string, scope: GitChangeScope, previousPath?: string) => {
+    return getGitFileDiff(repoPath, filePath, scope, previousPath)
   }
 )
 

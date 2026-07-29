@@ -28,9 +28,14 @@ const api = {
       throw error
     }
   },
-  getGitFileDiff: async (repoPath: string, filePath: string, scope: GitChangeScope) => {
+  getGitFileDiff: async (
+    repoPath: string,
+    filePath: string,
+    scope: GitChangeScope,
+    previousPath?: string
+  ) => {
     try {
-      return await ipcRenderer.invoke('getGitFileDiff', repoPath, filePath, scope)
+      return await ipcRenderer.invoke('getGitFileDiff', repoPath, filePath, scope, previousPath)
     } catch (error) {
       console.error('Preload getGitFileDiff error:', error)
       throw error

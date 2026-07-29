@@ -1,5 +1,5 @@
 import { spawn } from 'child_process'
-import { mkdtemp, rm, writeFile } from 'fs/promises'
+import { lstat, mkdtemp, readFile, readlink, rm, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import { isAbsolute, join, relative, resolve, sep } from 'path'
 import { simpleGit, type FileStatusResult } from 'simple-git'
@@ -31,6 +31,13 @@ interface GitCommandResult {
   stdout: string
   stderr: string
   exitCode: number | null
+  tooLarge: boolean
+  timedOut: boolean
+}
+
+interface FileContentResult {
+  content: string
+  isBinary: boolean
   tooLarge: boolean
   timedOut: boolean
 }
@@ -227,6 +234,105 @@ function getPublicGitError(stderr: string, exitCode: number | null): string {
   return firstLine || `Git 差异命令失败（退出码 ${exitCode ?? '未知'}）`
 }
 
+function emptyFileContent(): FileContentResult {
+  return {
+    content: '',
+    isBinary: false,
+    tooLarge: false,
+    timedOut: false
+  }
+}
+
+function hasNullByte(buffer: Buffer): boolean {
+  return buffer.includes(0)
+}
+
+async function readGitObjectContent(
+  repoRoot: string,
+  objectSpec: string,
+  limits: DiffLimits
+): Promise<FileContentResult> {
+  const result = await runGitCommandWithLimits(repoRoot, ['cat-file', '-p', objectSpec], limits)
+
+  if (result.timedOut) {
+    return { ...emptyFileContent(), timedOut: true }
+  }
+
+  if (result.tooLarge) {
+    return { ...emptyFileContent(), tooLarge: true }
+  }
+
+  // A missing side is expected for additions, deletions and repositories without HEAD.
+  if (result.exitCode !== 0) {
+    return emptyFileContent()
+  }
+
+  return {
+    content: result.stdout,
+    isBinary: result.stdout.includes('\0'),
+    tooLarge: false,
+    timedOut: false
+  }
+}
+
+async function readWorkingTreeContent(
+  absolutePath: string,
+  limits: DiffLimits
+): Promise<FileContentResult> {
+  let stats
+
+  try {
+    stats = await lstat(absolutePath)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return emptyFileContent()
+    }
+    throw error
+  }
+
+  if (stats.isSymbolicLink()) {
+    const content = await readlink(absolutePath)
+    return {
+      content,
+      isBinary: false,
+      tooLarge: Buffer.byteLength(content) > limits.maxBytes,
+      timedOut: false
+    }
+  }
+
+  if (!stats.isFile()) {
+    throw new Error('该变更不是可按文本读取的普通文件')
+  }
+
+  if (stats.size > limits.maxBytes) {
+    return { ...emptyFileContent(), tooLarge: true }
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), limits.timeoutMs)
+
+  try {
+    const buffer = await readFile(absolutePath, { signal: controller.signal })
+    if (buffer.byteLength > limits.maxBytes) {
+      return { ...emptyFileContent(), tooLarge: true }
+    }
+
+    return {
+      content: buffer.toString('utf8'),
+      isBinary: hasNullByte(buffer),
+      tooLarge: false,
+      timedOut: false
+    }
+  } catch (error) {
+    if ((error as Error).name === 'AbortError') {
+      return { ...emptyFileContent(), timedOut: true }
+    }
+    throw error
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 export async function getGitWorkingTreeChanges(repoPath: string): Promise<GitChangedFile[]> {
   const repoRoot = await resolveRepository(repoPath)
   const status = await simpleGit({
@@ -242,12 +348,14 @@ export async function getGitFileDiff(
   repoPath: string,
   filePath: string,
   scope: GitChangeScope,
+  previousPath?: string,
   limits: DiffLimits = DEFAULT_DIFF_LIMITS
 ): Promise<GitFileDiffResult> {
   const emptyResult: GitFileDiffResult = {
     path: filePath,
     scope,
-    patch: '',
+    originalContent: '',
+    modifiedContent: '',
     isBinary: false,
     tooLarge: false
   }
@@ -259,6 +367,9 @@ export async function getGitFileDiff(
 
     const repoRoot = await resolveRepository(repoPath)
     const { absolutePath, relativePath } = resolveFilePath(repoRoot, filePath)
+    const previousRelativePath = previousPath
+      ? resolveFilePath(repoRoot, previousPath).relativePath
+      : relativePath
     let commandResult: GitCommandResult
 
     if (scope === 'untracked') {
@@ -320,10 +431,46 @@ export async function getGitFileDiff(
       }
     }
 
+    if (isBinaryPatch(commandResult.stdout)) {
+      return { ...emptyResult, isBinary: true }
+    }
+
+    let original: FileContentResult
+    let modified: FileContentResult
+
+    if (scope === 'staged') {
+      ;[original, modified] = await Promise.all([
+        readGitObjectContent(repoRoot, `HEAD:${previousRelativePath}`, limits),
+        readGitObjectContent(repoRoot, `:${relativePath}`, limits)
+      ])
+    } else if (scope === 'unstaged') {
+      ;[original, modified] = await Promise.all([
+        readGitObjectContent(repoRoot, `:${relativePath}`, limits),
+        readWorkingTreeContent(absolutePath, limits)
+      ])
+    } else {
+      ;[original, modified] = await Promise.all([
+        Promise.resolve(emptyFileContent()),
+        readWorkingTreeContent(absolutePath, limits)
+      ])
+    }
+
+    if (original.timedOut || modified.timedOut) {
+      return { ...emptyResult, error: '读取文件内容超时，请稍后重试' }
+    }
+
+    if (original.tooLarge || modified.tooLarge) {
+      return { ...emptyResult, tooLarge: true }
+    }
+
+    if (original.isBinary || modified.isBinary) {
+      return { ...emptyResult, isBinary: true }
+    }
+
     return {
       ...emptyResult,
-      patch: commandResult.stdout,
-      isBinary: isBinaryPatch(commandResult.stdout)
+      originalContent: original.content,
+      modifiedContent: modified.content
     }
   } catch (error) {
     return {
