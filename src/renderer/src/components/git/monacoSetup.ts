@@ -1,29 +1,95 @@
 import { loader } from '@monaco-editor/react'
-import * as monaco from 'monaco-editor'
+import * as monaco from 'monaco-editor/editor/editor.api.js'
+import 'monaco-editor/editor/browser/widget/diffEditor/diffEditor.contribution.js'
+import 'monaco-editor/editor/contrib/bracketMatching/browser/bracketMatching.js'
+import 'monaco-editor/editor/contrib/clipboard/browser/clipboard.js'
+import 'monaco-editor/features/find/register.js'
+import 'monaco-editor/languages/definitions/bat/register.js'
+import 'monaco-editor/languages/definitions/cpp/register.js'
+import 'monaco-editor/languages/definitions/csharp/register.js'
+import 'monaco-editor/languages/definitions/css/register.js'
+import 'monaco-editor/languages/definitions/dockerfile/register.js'
+import 'monaco-editor/languages/definitions/go/register.js'
+import 'monaco-editor/languages/definitions/graphql/register.js'
+import 'monaco-editor/languages/definitions/handlebars/register.js'
+import 'monaco-editor/languages/definitions/hcl/register.js'
+import 'monaco-editor/languages/definitions/html/register.js'
+import 'monaco-editor/languages/definitions/ini/register.js'
+import 'monaco-editor/languages/definitions/java/register.js'
+import 'monaco-editor/languages/definitions/javascript/register.js'
+import 'monaco-editor/languages/definitions/kotlin/register.js'
+import 'monaco-editor/languages/definitions/less/register.js'
+import 'monaco-editor/languages/definitions/lua/register.js'
+import 'monaco-editor/languages/definitions/markdown/register.js'
+import 'monaco-editor/languages/definitions/mdx/register.js'
+import 'monaco-editor/languages/definitions/objective-c/register.js'
+import 'monaco-editor/languages/definitions/php/register.js'
+import 'monaco-editor/languages/definitions/powershell/register.js'
+import 'monaco-editor/languages/definitions/protobuf/register.js'
+import 'monaco-editor/languages/definitions/python/register.js'
+import 'monaco-editor/languages/definitions/razor/register.js'
+import 'monaco-editor/languages/definitions/ruby/register.js'
+import 'monaco-editor/languages/definitions/rust/register.js'
+import 'monaco-editor/languages/definitions/scss/register.js'
+import 'monaco-editor/languages/definitions/shell/register.js'
+import 'monaco-editor/languages/definitions/sql/register.js'
+import 'monaco-editor/languages/definitions/swift/register.js'
+import 'monaco-editor/languages/definitions/typescript/register.js'
+import 'monaco-editor/languages/definitions/xml/register.js'
+import 'monaco-editor/languages/definitions/yaml/register.js'
 import editorWorker from 'monaco-editor/editor/editor.worker.js?worker'
-import cssWorker from 'monaco-editor/language/css/css.worker.js?worker'
-import htmlWorker from 'monaco-editor/language/html/html.worker.js?worker'
-import jsonWorker from 'monaco-editor/language/json/json.worker.js?worker'
-import typescriptWorker from 'monaco-editor/language/typescript/ts.worker.js?worker'
 import { detectMonacoLanguage } from './languageDetection'
 
 globalThis.MonacoEnvironment = {
-  getWorker(_workerId, label) {
-    if (label === 'json') {
-      return new jsonWorker()
-    }
-    if (label === 'css' || label === 'scss' || label === 'less') {
-      return new cssWorker()
-    }
-    if (label === 'html' || label === 'handlebars' || label === 'razor') {
-      return new htmlWorker()
-    }
-    if (label === 'typescript' || label === 'javascript') {
-      return new typescriptWorker()
-    }
+  getWorker() {
     return new editorWorker()
   }
 }
+
+monaco.languages.register({
+  id: 'json',
+  extensions: ['.json', '.jsonc', '.bowerrc', '.jshintrc', '.jscsrc', '.eslintrc', '.babelrc'],
+  aliases: ['JSON', 'json'],
+  mimetypes: ['application/json']
+})
+
+monaco.languages.setLanguageConfiguration('json', {
+  comments: {
+    lineComment: '//',
+    blockComment: ['/*', '*/']
+  },
+  brackets: [
+    ['{', '}'],
+    ['[', ']']
+  ],
+  autoClosingPairs: [
+    { open: '{', close: '}' },
+    { open: '[', close: ']' },
+    { open: '"', close: '"' }
+  ]
+})
+
+monaco.languages.setMonarchTokensProvider('json', {
+  tokenPostfix: '.json',
+  tokenizer: {
+    root: [
+      [/[{}[\]]/, '@brackets'],
+      [/[,:]/, 'delimiter'],
+      [/\s+/, 'white'],
+      [/"(?:\\.|[^"\\])*"(?=\s*:)/, 'string.key'],
+      [/"(?:\\.|[^"\\])*"/, 'string.value'],
+      [/-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/, 'number'],
+      [/\b(?:true|false|null)\b/, 'keyword'],
+      [/\/\*/, 'comment', '@comment'],
+      [/\/\/.*$/, 'comment']
+    ],
+    comment: [
+      [/[^*/]+/, 'comment'],
+      [/\*\//, 'comment', '@pop'],
+      [/[*/]/, 'comment']
+    ]
+  }
+})
 
 loader.config({ monaco })
 

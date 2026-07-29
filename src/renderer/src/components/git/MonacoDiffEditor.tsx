@@ -1,6 +1,6 @@
 import { DiffEditor, type BeforeMount } from '@monaco-editor/react'
 import { useEffect, useMemo, useState } from 'react'
-import type { editor } from 'monaco-editor'
+import type { editor } from 'monaco-editor/editor/editor.api.js'
 import type { GitChangeScope } from '../../../../shared/gitChanges'
 import { configureGitokMonacoThemes, getMonacoLanguage } from './monacoSetup'
 
