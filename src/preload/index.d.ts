@@ -1,18 +1,12 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 import type { GitChangedFile, GitChangeScope, GitFileDiffResult } from '../shared/gitChanges'
 
-interface GitStatus {
-  path: string
-  name: string
-  isGitRepo: boolean
-  hasUncommittedChanges: boolean
-  isPushed: boolean
-  aheadCount: number
-  behindCount: number
-  branch?: string
-  lastCommitMessage?: string
-  lastCommitDate?: string
-}
+import type {
+  DirectoryListing,
+  RepositoryStatus as GitStatus,
+  WatchDirectory,
+  WatchScanResult
+} from '../shared/watchConfig'
 
 interface WindowControls {
   minimize: () => Promise<void>
@@ -26,6 +20,9 @@ interface WindowControls {
 interface CustomAPI {
   selectDirectory: () => Promise<{ canceled: boolean; filePaths: string[] }>
   scanGitRepos: (rootPath: string, includeRemote?: boolean) => Promise<GitStatus[]>
+  inspectWatchDirectory: (path: string) => Promise<WatchDirectory>
+  listWatchDirectories: (path: string) => Promise<DirectoryListing>
+  scanSelectedGitRepos: (paths: string[], includeRemote?: boolean) => Promise<WatchScanResult>
   getGitWorkingTreeChanges: (repoPath: string) => Promise<GitChangedFile[]>
   getGitFileDiff: (
     repoPath: string,

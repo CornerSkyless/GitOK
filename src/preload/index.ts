@@ -20,6 +20,10 @@ const api = {
       throw error
     }
   },
+  inspectWatchDirectory: (path: string) => ipcRenderer.invoke('inspectWatchDirectory', path),
+  listWatchDirectories: (path: string) => ipcRenderer.invoke('listWatchDirectories', path),
+  scanSelectedGitRepos: (paths: string[], includeRemote: boolean = true) =>
+    ipcRenderer.invoke('scanSelectedGitRepos', paths, includeRemote),
   getGitWorkingTreeChanges: async (repoPath: string) => {
     try {
       return await ipcRenderer.invoke('getGitWorkingTreeChanges', repoPath)

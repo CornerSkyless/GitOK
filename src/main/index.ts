@@ -15,6 +15,11 @@ import { spawn } from 'child_process'
 import { readdir, stat } from 'fs/promises'
 import { getGitFileDiff, getGitWorkingTreeChanges } from './gitChanges'
 import type { GitChangeScope } from '../shared/gitChanges'
+import {
+  inspectWatchDirectory,
+  listWatchDirectories,
+  scanSelectedGitRepos
+} from './watchDirectories'
 
 let tray: Tray | null = null
 let mainWindow: BrowserWindow | null = null
@@ -278,7 +283,8 @@ async function getUpstreamBranch(repoPath: string): Promise<string | undefined> 
 // Git 状态检查函数
 async function checkGitStatus(
   repoPath: string,
-  includeRemote: boolean = true
+  includeRemote: boolean = true,
+  strict: boolean = false
 ): Promise<GitStatusResult> {
   const isGitRepo = await isGitRepository(repoPath)
 
@@ -298,6 +304,7 @@ async function checkGitStatus(
     const statusResult = await executeGitCommand(repoPath, ['status', '--porcelain'])
     hasUncommittedChanges = statusResult.trim().length > 0
   } catch (error) {
+    if (strict) throw error
     console.error(`检查 Git 工作区状态失败 ${repoPath}:`, error)
   }
 
@@ -366,6 +373,14 @@ function executeGitCommand(cwd: string, args: string[]): Promise<string> {
     const git = spawn('git', args, { cwd })
     let output = ''
     let errorOutput = ''
+    const timeout = setTimeout(() => {
+      git.kill()
+      reject(new Error('Git 命令超时'))
+    }, 10_000)
+    git.on('error', (error) => {
+      clearTimeout(timeout)
+      reject(error)
+    })
 
     git.stdout.on('data', (data) => {
       output += data.toString()
@@ -376,6 +391,7 @@ function executeGitCommand(cwd: string, args: string[]): Promise<string> {
     })
 
     git.on('close', (code) => {
+      clearTimeout(timeout)
       if (code === 0) {
         resolve(output)
       } else {
@@ -450,6 +466,12 @@ ipcMain.handle('selectDirectory', async () => {
     throw error
   }
 })
+
+ipcMain.handle('inspectWatchDirectory', (_, path: string) => inspectWatchDirectory(path))
+ipcMain.handle('listWatchDirectories', (_, path: string) => listWatchDirectories(path))
+ipcMain.handle('scanSelectedGitRepos', (_, paths: string[], includeRemote: boolean = true) =>
+  scanSelectedGitRepos(paths, includeRemote, (path, remote) => checkGitStatus(path, remote, true))
+)
 
 ipcMain.handle('scanGitRepos', async (_, rootPath: string, includeRemote: boolean = true) => {
   try {

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import { WatchConfigEditor } from './WatchConfigEditor'
+import type { WatchConfig } from '../../../shared/watchConfig'
 
 interface UpdateCheckResult {
   hasError: boolean
@@ -14,8 +16,8 @@ interface UpdateCheckResult {
 interface SettingsModalProps {
   open: boolean
   onClose: () => void
-  currentDirectory: string
-  onDirectoryChange: (path: string) => void
+  watchConfig: WatchConfig
+  onApplyWatchConfig: (config: WatchConfig) => void
   autoCheckEnabled: boolean
   onStartAutoCheck: () => void
   onStopAutoCheck: () => void
@@ -27,8 +29,8 @@ interface SettingsModalProps {
 const SettingsModal: React.FC<SettingsModalProps> = ({
   open,
   onClose,
-  currentDirectory,
-  onDirectoryChange,
+  watchConfig,
+  onApplyWatchConfig,
   autoCheckEnabled,
   onStartAutoCheck,
   onStopAutoCheck,
@@ -50,19 +52,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
   if (!open) return null
 
-  const handleSelectDirectory = async (): Promise<void> => {
-    try {
-      const result = await window.api.selectDirectory()
-      if (result && result.filePaths && result.filePaths.length > 0) {
-        onDirectoryChange(result.filePaths[0])
-      }
-    } catch (error) {
-      console.error('选择目录失败:', error)
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      alert(`选择目录失败: ${errorMessage}`)
-    }
-  }
-
   const handleCheckUpdate = async (): Promise<void> => {
     setIsCheckingUpdate(true)
     setUpdateResult(null)
@@ -78,7 +67,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div className="settings-overlay" onClick={onClose}>
-      <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="settings-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="设置"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="settings-modal-header">
           <h2>设置</h2>
           <button className="settings-close-btn" onClick={onClose} aria-label="关闭设置">
@@ -90,28 +85,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         <div className="settings-modal-body">
-          {/* 目录配置 */}
-          <section className="settings-section">
-            <h3>监听目录</h3>
-            <p className="settings-section-desc">
-              选择要监听的目录，将扫描其下一级子文件夹的 Git 状态
-            </p>
-            <div className="settings-directory-controls">
-              <input
-                type="text"
-                value={currentDirectory}
-                placeholder="请选择要监听的目录"
-                readOnly
-                className="settings-directory-input"
-              />
-              <button onClick={handleSelectDirectory} className="settings-select-btn">
-                选择目录
-              </button>
-            </div>
-            {currentDirectory && (
-              <p className="settings-current-path">当前监听: {currentDirectory}</p>
-            )}
-          </section>
+          <WatchConfigEditor config={watchConfig} onApply={onApplyWatchConfig} onCancel={onClose} />
 
           {/* 自动检查配置 */}
           <section className="settings-section">

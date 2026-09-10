@@ -49,7 +49,7 @@ export function GitSidebar({
     <aside className="git-workspace__sidebar" aria-label="筛选">
       <div className="git-workspace__sidebar-head">
         <div className="git-workspace__brand-title">GitOK</div>
-        <div className="git-workspace__brand-sub">一级子目录的 Git 状态总览。</div>
+        <div className="git-workspace__brand-sub">所监听项目的 Git 状态总览。</div>
       </div>
       <div className="git-workspace__sidebar-scroll">
         <div className="git-workspace__nav-label">视图</div>

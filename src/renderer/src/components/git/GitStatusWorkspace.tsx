@@ -3,11 +3,13 @@ import type { GitFilterKey, GitSortKey, GitStatus } from './types'
 import { GitSidebar } from './GitSidebar'
 import { RepoListPane } from './RepoListPane'
 import { RepoDetailPane } from './RepoDetailPane'
+import type { WatchConfig, WatchError } from '../../../../shared/watchConfig'
 
 interface GitStatusWorkspaceProps {
   gitStatuses: GitStatus[]
   isLoading: boolean
-  watchRootPath: string
+  watchConfig: WatchConfig
+  scanErrors: WatchError[]
   autoCheckEnabled: boolean
   onRefresh: () => void
 }
@@ -80,7 +82,8 @@ function sortRepos(
 export function GitStatusWorkspace({
   gitStatuses,
   isLoading,
-  watchRootPath,
+  watchConfig,
+  scanErrors,
   autoCheckEnabled,
   onRefresh
 }: GitStatusWorkspaceProps): React.JSX.Element {
@@ -120,11 +123,13 @@ export function GitStatusWorkspace({
   const listEmptyHint = useMemo(() => {
     if (isLoading && gitStatuses.length === 0) return null
     if (!isLoading && gitStatuses.length === 0)
-      return '当前目录下没有可扫描的一级子文件夹。请在设置中选择包含多个项目的上级目录。'
+      return watchConfig.mode === 'manual'
+        ? '当前没有可读取的已选仓库。请检查错误提示，或在设置中调整项目清单。'
+        : '当前目录下没有可扫描的一级子文件夹。请在设置中选择包含多个项目的上级目录。'
     if (!isLoading && visibleRepos.length === 0)
       return '没有匹配当前筛选或搜索的项目。可尝试调整左侧「视图」，或清空搜索框。'
     return null
-  }, [gitStatuses.length, visibleRepos.length, isLoading])
+  }, [gitStatuses.length, visibleRepos.length, isLoading, watchConfig.mode])
 
   const selectedRepo = selectedPath
     ? (gitStatuses.find((s) => s.path === selectedPath) ?? null)
@@ -140,8 +145,17 @@ export function GitStatusWorkspace({
 
       <div className="git-workspace__main">
         <div className="git-workspace__toolbar">
-          <span className="git-workspace__toolbar-dir" title={watchRootPath}>
-            {watchRootPath}
+          <span
+            className="git-workspace__toolbar-dir"
+            title={
+              watchConfig.mode === 'parent'
+                ? watchConfig.parentPath
+                : watchConfig.repoPaths.join('\n')
+            }
+          >
+            {watchConfig.mode === 'parent'
+              ? watchConfig.parentPath
+              : `手动选择 · ${watchConfig.repoPaths.length} 个项目`}
           </span>
           <div className="git-workspace__toolbar-actions">
             {autoCheckEnabled && <span className="git-workspace__pill">自动检查开启</span>}
@@ -162,6 +176,18 @@ export function GitStatusWorkspace({
           </div>
         </div>
 
+        {scanErrors.length > 0 && (
+          <div className="watch-scan-errors" role="alert">
+            <strong>{scanErrors.length} 个目录检查失败，下次刷新将重试</strong>
+            <ul>
+              {scanErrors.map((error) => (
+                <li key={error.path}>
+                  <span>{error.path}</span>：{error.message}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="git-workspace__split">
           <RepoListPane
             items={visibleRepos}
