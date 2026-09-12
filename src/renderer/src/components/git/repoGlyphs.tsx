@@ -1,3 +1,4 @@
+import { isPendingPush } from '../../../../shared/gitPush'
 import React from 'react'
 import {
   HiXCircle,
@@ -34,7 +35,7 @@ export function RepoStatusGlyphs({
     return <>{wrapTone(<HiXCircle size={px} aria-hidden />, 'danger')}</>
   }
 
-  if (status.hasUncommittedChanges && (!status.isPushed || status.aheadCount > 0)) {
+  if (status.hasUncommittedChanges && isPendingPush(status)) {
     return (
       <>
         {wrapTone(<HiExclamationTriangle size={px} aria-hidden />, 'warning')}
@@ -45,11 +46,13 @@ export function RepoStatusGlyphs({
   if (status.hasUncommittedChanges) {
     return <>{wrapTone(<HiExclamationTriangle size={px} aria-hidden />, 'warning')}</>
   }
-  if (!status.isPushed || status.aheadCount > 0) {
+  if (isPendingPush(status)) {
     return <>{wrapTone(<HiArrowUpCircle size={px} aria-hidden />, 'accent')}</>
   }
   if (status.behindCount > 0)
     return <>{wrapTone(<HiArrowDown size={px} aria-hidden />, 'warning')}</>
+  if (!status.upstream || status.remoteStatusError || !status.branch)
+    return <>{wrapTone(<HiExclamationTriangle size={px} aria-hidden />, 'muted')}</>
   return <>{wrapTone(<HiCheckCircle size={px} aria-hidden />, 'success')}</>
 }
 

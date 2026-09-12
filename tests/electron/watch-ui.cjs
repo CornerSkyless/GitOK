@@ -158,7 +158,7 @@ async function run() {
     `document.querySelector('.git-workspace__toolbar-dir')?.textContent === '手动选择 · 3 个项目'`
   )
   await waitFor(`!document.body.textContent.includes('正在刷新…')`)
-  if (process.platform === 'darwin') assert.equal(trayTitle, '1')
+  if (process.platform === 'darwin') assert.equal(trayTitle, '3') // All three fixtures have no upstream configured.
   await screenshot('02-selected-workspace')
   report(
     'Multiple roots, deep repos, same names, selectable tree roots, synchronized duplicate checkboxes and tray count'

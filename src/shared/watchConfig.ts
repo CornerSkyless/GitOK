@@ -1,3 +1,5 @@
+import type { GitUpstream } from './gitPush'
+
 export interface WatchConfig {
   version: 1
   mode: 'parent' | 'manual'
@@ -34,6 +36,8 @@ export interface RepositoryStatus {
   aheadCount: number
   behindCount: number
   branch?: string
+  upstream?: GitUpstream
+  remoteStatusError?: string
   lastCommitMessage?: string
   lastCommitDate?: string
 }

@@ -149,4 +149,78 @@ describe('watch controller', () => {
     expect(scan).toHaveBeenCalledTimes(2)
     controller.dispose()
   })
+  it('post-push refresh replaces counts and tray state and ignores a pre-push scan finishing later', async () => {
+    let finishOld!: (value: WatchScanResult) => void
+    const pushed = result('/repo')
+    const scan = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finishOld = resolve
+          })
+      )
+      .mockResolvedValue(pushed)
+    const publish = vi.fn()
+    const updateTray = vi.fn()
+    const controller = new WatchController({ scan, publish, updateTray })
+    controller.configure(emptyWatchConfig('/parent'), false)
+    await controller.refresh()
+    finishOld({
+      statuses: [{ ...repository('/repo'), aheadCount: 3, isPushed: false }],
+      errors: []
+    })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(publish.mock.lastCall?.[0].statuses).toEqual(pushed.statuses)
+    expect(updateTray.mock.lastCall?.[0]).toEqual(pushed.statuses)
+    expect(
+      updateTray.mock.calls.some(([statuses]) =>
+        statuses.some((repo: RepositoryStatus) => repo.aheadCount > 0)
+      )
+    ).toBe(false)
+    expect(scan.mock.lastCall?.[1]).toBe(true)
+    controller.dispose()
+  })
+
+  it('does not reuse cached counts or errors after the upstream changes on a local scan', async () => {
+    const old = {
+      ...repository('/repo'),
+      upstream: { remote: 'origin', branch: 'refs/heads/main', ref: 'refs/remotes/origin/main' },
+      aheadCount: 2,
+      isPushed: false
+    }
+    const changed = {
+      ...repository('/repo'),
+      upstream: { ...old.upstream, remote: 'team', ref: 'refs/remotes/team/main' },
+      isPushed: false,
+      remoteStatusError: '远程状态尚未检查，请刷新状态'
+    }
+    const scan = vi
+      .fn()
+      .mockResolvedValueOnce({ statuses: [old], errors: [] })
+      .mockResolvedValue({ statuses: [changed], errors: [] })
+    const publish = vi.fn()
+    const controller = new WatchController({ scan, publish, updateTray: vi.fn() })
+    controller.configure(emptyWatchConfig('/parent'), true)
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(publish.mock.lastCall?.[0].statuses).toEqual([changed])
+    controller.dispose()
+  })
+  it('does not hide a new upstream read failure behind cached local state', async () => {
+    const failed = {
+      ...repository('/repo'),
+      isPushed: false,
+      remoteStatusError: '读取上游状态失败'
+    }
+    const scan = vi
+      .fn()
+      .mockResolvedValueOnce(result('/repo'))
+      .mockResolvedValue({ statuses: [failed], errors: [] })
+    const publish = vi.fn()
+    const controller = new WatchController({ scan, publish, updateTray: vi.fn() })
+    controller.configure(emptyWatchConfig('/parent'), true)
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(publish.mock.lastCall?.[0].statuses).toEqual([failed])
+    controller.dispose()
+  })
 })

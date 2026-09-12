@@ -1,3 +1,4 @@
+import { REMOTE_STATUS_NOT_CHECKED, sameUpstream } from '../../shared/gitPush'
 import { hasWatchTargets, type WatchConfig, type WatchScanResult } from '../../shared/watchConfig'
 
 export interface WatchState extends WatchScanResult {
@@ -68,8 +69,8 @@ export class WatchController {
     this.dependencies.publish(this.state)
   }
 
-  refresh(): void {
-    void this.scan(true)
+  refresh(): Promise<void> {
+    return this.scan(true)
   }
 
   dispose(): void {
@@ -102,12 +103,17 @@ export class WatchController {
       const statuses = result.statuses.map((status) => {
         const cached = previous.get(status.path)
         // Local checks must not erase the most recent remote comparison.
-        return !includeRemote && cached && cached.branch === status.branch
+        return !includeRemote &&
+          cached &&
+          (!status.remoteStatusError || status.remoteStatusError === REMOTE_STATUS_NOT_CHECKED) &&
+          cached.branch === status.branch &&
+          sameUpstream(cached.upstream, status.upstream)
           ? {
               ...status,
               aheadCount: cached.aheadCount,
               behindCount: cached.behindCount,
-              isPushed: cached.isPushed
+              isPushed: cached.isPushed,
+              remoteStatusError: cached.remoteStatusError
             }
           : status
       })

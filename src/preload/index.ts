@@ -1,9 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import type { GitPushRequest, GitPushResult } from '../shared/gitPush'
 import type { GitChangeScope } from '../shared/gitChanges'
 
 // Custom APIs for renderer
 const api = {
+  pushGitRepo: (request: GitPushRequest): Promise<GitPushResult> =>
+    ipcRenderer.invoke('pushGitRepo', request),
   selectDirectory: async () => {
     try {
       return await ipcRenderer.invoke('selectDirectory')

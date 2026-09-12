@@ -1,3 +1,4 @@
+import { getPushDisabledReason, isPendingPush, isSynced } from '../../../../shared/gitPush'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { GitFilterKey, GitSortKey, GitStatus } from './types'
 import { GitSidebar } from './GitSidebar'
@@ -11,7 +12,7 @@ interface GitStatusWorkspaceProps {
   watchConfig: WatchConfig
   scanErrors: WatchError[]
   autoCheckEnabled: boolean
-  onRefresh: () => void
+  onRefresh: () => Promise<void>
 }
 
 function applyFilter(list: GitStatus[], activeFilter: GitFilterKey): GitStatus[] {
@@ -21,18 +22,11 @@ function applyFilter(list: GitStatus[], activeFilter: GitFilterKey): GitStatus[]
     case 'hasChanges':
       return list.filter((s) => s.isGitRepo && s.hasUncommittedChanges)
     case 'pendingPush':
-      return list.filter((s) => s.isGitRepo && (!s.isPushed || s.aheadCount > 0))
+      return list.filter(isPendingPush)
     case 'behind':
       return list.filter((s) => s.isGitRepo && s.behindCount > 0)
     case 'synced':
-      return list.filter(
-        (s) =>
-          s.isGitRepo &&
-          !s.hasUncommittedChanges &&
-          s.isPushed &&
-          s.aheadCount === 0 &&
-          s.behindCount === 0
-      )
+      return list.filter(isSynced)
     default:
       return list
   }
@@ -63,7 +57,7 @@ function sortRepos(
         const priority = (s: GitStatus): number => {
           if (!s.isGitRepo) return 0
           if (s.hasUncommittedChanges) return 4
-          if (!s.isPushed || s.aheadCount > 0) return 3
+          if (isPendingPush(s)) return 3
           if (s.behindCount > 0) return 2
           return 1
         }
@@ -92,6 +86,43 @@ export function GitStatusWorkspace({
   const [sortType, setSortType] = useState<GitSortKey>('lastUpdate')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
+
+  const [pushStates, setPushStates] = useState<
+    Record<string, { pending: boolean; error?: string }>
+  >({})
+  const [pushNotice, setPushNotice] = useState('')
+  const pushingPaths = useRef(new Set<string>())
+
+  const handlePush = async (repo: GitStatus): Promise<void> => {
+    if (pushingPaths.current.has(repo.path) || getPushDisabledReason(repo) || !repo.upstream) return
+    pushingPaths.current.add(repo.path)
+    setPushStates((states) => ({ ...states, [repo.path]: { pending: true } }))
+    setPushNotice('')
+    let error: string | undefined
+    try {
+      const result = await window.api.pushGitRepo({
+        repoPath: repo.path,
+        expectedBranch: repo.branch!,
+        expectedUpstream: repo.upstream
+      })
+      if (result.success) setPushNotice(`${repo.name} 推送成功`)
+      else {
+        error = result.error
+        setPushNotice(`${repo.name} 推送失败：${error}`)
+      }
+    } catch (cause) {
+      error = cause instanceof Error ? cause.message : String(cause)
+      setPushNotice(`${repo.name} 推送失败：${error}`)
+    } finally {
+      // A full scan invalidates any pre-push scan still in flight, including tray updates.
+      try {
+        await onRefresh()
+      } finally {
+        pushingPaths.current.delete(repo.path)
+        setPushStates((states) => ({ ...states, [repo.path]: { pending: false, error } }))
+      }
+    }
+  }
 
   const sortSnapshotRef = useRef({ sortType, sortDirection })
   sortSnapshotRef.current = { sortType, sortDirection }
@@ -176,6 +207,19 @@ export function GitStatusWorkspace({
           </div>
         </div>
 
+        {pushNotice && (
+          <div className="git-workspace__push-notice" role="status">
+            <span>{pushNotice}</span>
+            <button
+              type="button"
+              className="git-workspace__icon-btn"
+              aria-label="关闭推送提示"
+              onClick={() => setPushNotice('')}
+            >
+              ×
+            </button>
+          </div>
+        )}
         {scanErrors.length > 0 && (
           <div className="watch-scan-errors" role="alert">
             <strong>{scanErrors.length} 个目录检查失败，下次刷新将重试</strong>
@@ -201,7 +245,13 @@ export function GitStatusWorkspace({
             isLoading={isLoading}
             emptyHint={listEmptyHint}
           />
-          <RepoDetailPane repo={selectedRepo} />
+          <RepoDetailPane
+            repo={selectedRepo}
+            pushState={selectedRepo ? pushStates[selectedRepo.path] : undefined}
+            onPush={(repo) => {
+              void handlePush(repo)
+            }}
+          />
         </div>
       </div>
     </div>

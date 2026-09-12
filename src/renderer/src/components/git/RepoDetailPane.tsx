@@ -1,5 +1,6 @@
+import { getPushDisabledReason, isPendingPush } from '../../../../shared/gitPush'
 import React, { useCallback, useEffect, useState } from 'react'
-import { HiOutlineFolderOpen } from 'react-icons/hi2'
+import { HiArrowUpTray, HiOutlineFolderOpen } from 'react-icons/hi2'
 import type { GitStatus } from './types'
 import { RepoStatusGlyphs } from './repoGlyphs'
 import { getPrimaryStatusChip, getRepoStatusSummary } from './statusText'
@@ -32,6 +33,8 @@ function DetailField({
 
 interface RepoDetailPaneProps {
   repo: GitStatus | null
+  pushState?: { pending: boolean; error?: string }
+  onPush: (repo: GitStatus) => void
 }
 
 function RepoOverview({ repo }: { repo: GitStatus }): React.JSX.Element {
@@ -83,7 +86,11 @@ function RepoOverview({ repo }: { repo: GitStatus }): React.JSX.Element {
 }
 
 /** 右侧：当前仓库详情与按需加载的未提交差异 */
-export function RepoDetailPane({ repo }: RepoDetailPaneProps): React.JSX.Element {
+export function RepoDetailPane({
+  repo,
+  pushState,
+  onPush
+}: RepoDetailPaneProps): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<'overview' | 'changes'>('overview')
   const [changeCount, setChangeCount] = useState<number | null>(null)
 
@@ -131,7 +138,44 @@ export function RepoDetailPane({ repo }: RepoDetailPaneProps): React.JSX.Element
               </button>
             </div>
           </div>
+          {(isPendingPush(repo) || pushState?.pending) && (
+            <button
+              type="button"
+              className="git-workspace__btn-primary git-workspace__push-button"
+              disabled={pushState?.pending || Boolean(getPushDisabledReason(repo))}
+              onClick={() => onPush(repo)}
+              aria-label={`推送 ${repo.name}`}
+            >
+              {pushState?.pending ? (
+                <span className="git-workspace__spinner" aria-hidden />
+              ) : (
+                <HiArrowUpTray size={16} aria-hidden />
+              )}
+              {pushState?.pending ? '推送中…' : '推送'}
+            </button>
+          )}
         </div>
+
+        {repo.isGitRepo && (
+          <div className="git-workspace__push-info">
+            {repo.upstream && (
+              <span>
+                推送目标：
+                <code>
+                  {repo.upstream.remote} / {repo.upstream.branch.replace(/^refs\/heads\//, '')}
+                </code>
+              </span>
+            )}
+            {getPushDisabledReason(repo) && (
+              <span className="git-workspace__doc-hint">{getPushDisabledReason(repo)}</span>
+            )}
+            {pushState?.error && (
+              <span className="git-workspace__push-error" role="alert">
+                推送失败：{pushState.error}
+              </span>
+            )}
+          </div>
+        )}
 
         {repo.isGitRepo && (
           <div className="git-workspace__detail-tabs" role="tablist" aria-label="仓库详情">
