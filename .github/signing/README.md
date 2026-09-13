@@ -16,6 +16,8 @@ Release 工作流只接受与 `package.json` 一致、已合入 `main` 的 `vX.Y
 
    脚本固定上传到 `CornerSkyless/GitOK` 的 `apple-release` 环境，通过隐藏输入读取两项密码；凭据通过标准输入传给 GitHub CLI，不写入代码或临时文本文件。不要把 `.p12`、Base64 或密码发到聊天里。
 
+若通过 OpenSSL 3 从 CSR 私钥生成 P12，需要使用 macOS 钥匙串支持的封装格式，并包含 Apple Developer ID G2 中间证书。可在导出时指定 `-keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES -macalg sha1`，使用高强度随机密码并通过 `-passout file:...` 读取。上传前先在临时钥匙串验证导入；默认 PBES2 格式可能报 `MAC verification failed`，即使密码正确。
+
 也可在 [仓库 Environments 设置](https://github.com/CornerSkyless/GitOK/settings/environments)选择 `apple-release`，手动添加以下 **Environment secrets**（不是 Repository secrets）：
 
 | Secret                         | 内容                                  |

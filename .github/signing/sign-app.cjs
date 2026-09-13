@@ -32,7 +32,7 @@ async function main() {
     identityValidation: true,
     preAutoEntitlements: false,
     preEmbedProvisioningProfile: false,
-    strictVerify: true,
+    // The default enables --strict; this library treats a truthy value as flag names.
     optionsForFile: () => ({
       hardenedRuntime: true,
       entitlements: resolve('build/entitlements.mac.plist')
@@ -42,9 +42,11 @@ async function main() {
   console.log(identity)
 }
 
-main().catch(() => {
+main().catch((error) => {
   console.error(
     'Developer ID signing failed. Check certificate validity, team and bundle integrity.'
   )
+  // Signing receives no passwords; preserve codesign diagnostics for release failures.
+  console.error(error instanceof Error ? error.message : 'Unknown signing error.')
   process.exitCode = 1
 })
