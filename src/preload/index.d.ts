@@ -1,4 +1,5 @@
 import type { GitPushRequest, GitPushResult } from '../shared/gitPush'
+import type { OpenProjectResult, ProjectApplication } from '../shared/projectApplications'
 import { ElectronAPI } from '@electron-toolkit/preload'
 import type { GitChangedFile, GitChangeScope, GitFileDiffResult } from '../shared/gitChanges'
 
@@ -19,6 +20,10 @@ interface WindowControls {
 }
 
 interface CustomAPI {
+  openProjectInApp: (
+    folderPath: string,
+    application: ProjectApplication
+  ) => Promise<OpenProjectResult>
   pushGitRepo: (request: GitPushRequest) => Promise<GitPushResult>
   selectDirectory: () => Promise<{ canceled: boolean; filePaths: string[] }>
   scanGitRepos: (rootPath: string, includeRemote?: boolean) => Promise<GitStatus[]>

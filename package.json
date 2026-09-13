@@ -1,6 +1,6 @@
 {
   "name": "gitok",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "GitOK - 一个用于监控本地目录下所有项目 Git 状态的 Electron 应用",
   "main": "./out/main/index.js",
   "author": "geestack.com",
@@ -10,6 +10,7 @@
     "lint": "eslint --cache .",
     "test": "vitest run",
     "test:watch-ui": "npm run build && electron tests/electron/watch-ui.cjs",
+    "test:open-project-ui": "npm run build && electron tests/electron/open-project-ui.cjs",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",

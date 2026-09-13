@@ -13,6 +13,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { readdir, stat } from 'fs/promises'
 import { checkGitStatus } from './gitStatus'
+import { createProjectLauncher } from './projectApplications'
 import { pushGitRepo } from './gitPush'
 import type { GitPushRequest } from '../shared/gitPush'
 import { getGitFileDiff, getGitWorkingTreeChanges } from './gitChanges'
@@ -404,6 +405,11 @@ ipcMain.handle('getAppVersion', () => {
 ipcMain.handle('openFolder', async (_, folderPath: string) => {
   await shell.openPath(folderPath)
 })
+
+const openProjectInApp = createProjectLauncher({ openExternal: (url) => shell.openExternal(url) })
+ipcMain.handle('openProjectInApp', (_, folderPath: unknown, application: unknown) =>
+  openProjectInApp(folderPath, application)
+)
 
 ipcMain.handle('checkForUpdates', async (): Promise<UpdateCheckResult> => {
   try {

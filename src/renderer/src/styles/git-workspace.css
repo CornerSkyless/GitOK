@@ -456,6 +456,92 @@
   background: var(--bg-hover);
 }
 
+.git-workspace__open-project {
+  position: relative;
+  max-width: 100%;
+}
+
+.git-workspace__open-project-buttons {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-muted);
+}
+
+.git-workspace__open-project-buttons button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.git-workspace__open-project-buttons .git-workspace__open-project-toggle {
+  border-left: 1px solid var(--border);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.git-workspace__open-project-buttons button:hover:not(:disabled),
+.git-workspace__open-project-menu button:hover {
+  color: var(--accent);
+  background: var(--bg-hover);
+}
+
+.git-workspace__open-project-buttons button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.git-workspace__open-project button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.git-workspace__open-project-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  width: 160px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 16%);
+}
+
+.git-workspace__open-project-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.git-workspace__open-project-error {
+  margin-top: 6px;
+  max-width: 320px;
+  color: var(--danger);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
 .git-workspace__detail-fields {
   display: flex;
   flex-direction: column;

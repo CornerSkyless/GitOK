@@ -5,6 +5,7 @@ import type { GitStatus } from './types'
 import { RepoStatusGlyphs } from './repoGlyphs'
 import { getPrimaryStatusChip, getRepoStatusSummary } from './statusText'
 import { RepoChangesPane } from './RepoChangesPane'
+import { OpenProjectButton } from './OpenProjectButton'
 
 function DetailField({
   label,
@@ -136,6 +137,7 @@ export function RepoDetailPane({
               >
                 <HiOutlineFolderOpen size={18} />
               </button>
+              <OpenProjectButton key={repo.path} folderPath={repo.path} />
             </div>
           </div>
           {(isPendingPush(repo) || pushState?.pending) && (
