@@ -5,63 +5,136 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: macos-latest
-
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x64]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          node-version: '20'
-          cache: 'yarn'
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate release source
+        run: |
+          git merge-base --is-ancestor HEAD origin/main
+          node .github/signing/check-release.cjs
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: yarn
       - run: yarn install --frozen-lockfile
       - run: npm run typecheck
       - run: npx electron-vite build
-      - name: Build arm64
-        run: npx electron-builder --mac --arm64
-      - name: Build x64
-        run: npx electron-builder --mac --x64
-      - uses: actions/upload-artifact@v4
+      - name: Build unsigned application
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npx electron-builder --mac --dir --${{ matrix.arch }} --publish never
+      - name: Archive unsigned application
+        env:
+          TARGET_ARCH: ${{ matrix.arch }}
+        run: |
+          app_path="dist/mac/GitOK.app"
+          binary_arch="x86_64"
+          if [ "$TARGET_ARCH" = arm64 ]; then
+            app_path="dist/mac-arm64/GitOK.app"
+            binary_arch="arm64"
+          fi
+          lipo -verify_arch "$binary_arch" "$app_path/Contents/MacOS/GitOK"
+          mkdir unsigned-artifacts
+          ditto -c -k --sequesterRsrc --keepParent "$app_path" "unsigned-artifacts/unsigned-${TARGET_ARCH}.zip"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: build
-          path: dist/
+          name: unsigned-${{ matrix.arch }}
+          path: unsigned-artifacts/*.zip
+          if-no-files-found: error
+          retention-days: 1
+
+  sign:
+    needs: build
+    runs-on: macos-latest
+    timeout-minutes: 150
+    environment: apple-release
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate approved release source
+        run: |
+          git merge-base --is-ancestor HEAD origin/main
+          node .github/signing/check-release.cjs
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Install locked signing tools without lifecycle scripts
+        run: npm ci --prefix .github/signing --ignore-scripts --no-audit --no-fund
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: unsigned-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/unsigned-artifacts
+      - name: Sign, notarize, staple and verify both architectures
+        env:
+          APPLE_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: bash .github/signing/sign-release.sh
+      - name: Remove temporary credentials even after failure
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/gitok-signing.keychain-db" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/gitok-signing.p12"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: signed-release
+          path: ${{ runner.temp }}/signed-release/*
+          if-no-files-found: error
+          retention-days: 7
 
   release:
-    needs: build
+    needs: sign
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
-
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-      - name: Prepare release artifacts
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: signed-release
+          path: release-artifacts
+      - name: Verify release assets
         run: |
-          mkdir release-artifacts
-          find . -name "*.zip" -exec cp {} release-artifacts/ \;
-          find . -name "*.dmg" -exec sh -c '
-            for f; do
-              dir=$(dirname "$f")
-              archdir=$(basename "$dir")
-              arch="${archdir#build-}"
-              base="${f%.dmg}"
-              cp "$f" "release-artifacts/$(basename "$base")-${arch}.dmg"
+          node .github/signing/check-release.cjs
+          version="${GITHUB_REF_NAME#v}"
+          for arch in arm64 x64; do
+            for extension in zip dmg; do
+              test -s "release-artifacts/gitok-${version}-${arch}.${extension}"
             done
-          ' sh {} +
-      - name: Prepare release notes
-        run: |
-          notes_file=".github/release-notes/${GITHUB_REF_NAME}.md"
-          if [ ! -f "$notes_file" ]; then
-            echo "::error file=$notes_file::Release notes are required. Add concise user-facing bullet points for this version."
-            exit 1
-          fi
-          cp "$notes_file" release-notes.md
-      - name: Create Release
+          done
+          cd release-artifacts
+          sha256sum --check SHA256SUMS
+      - name: Publish signed release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ github.ref_name }}" \
-            --title "${{ github.ref_name }}" \
-            --notes-file release-notes.md \
+          gh release create "$GITHUB_REF_NAME" \
+            --verify-tag \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file ".github/release-notes/${GITHUB_REF_NAME}.md" \
             release-artifacts/*

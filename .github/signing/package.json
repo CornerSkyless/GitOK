@@ -1,0 +1,8 @@
+{
+  "name": "gitok-release-signing",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "@electron/osx-sign": "1.3.1"
+  }
+}
