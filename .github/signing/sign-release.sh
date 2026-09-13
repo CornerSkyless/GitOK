@@ -55,7 +55,7 @@ for arch in arm64 x64; do
   app_path="$arch_path/GitOK.app"
   binary_arch="$arch"
   if [ "$arch" = x64 ]; then binary_arch=x86_64; fi
-  lipo -verify_arch "$binary_arch" "$app_path/Contents/MacOS/GitOK"
+  lipo "$app_path/Contents/MacOS/GitOK" -verify_arch "$binary_arch"
   test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app_path/Contents/Info.plist")" = com.geestack.gitok
   test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app_path/Contents/Info.plist")" = "$version"
 

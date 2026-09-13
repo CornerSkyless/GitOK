@@ -50,7 +50,7 @@ jobs:
             app_path="dist/mac-arm64/GitOK.app"
             binary_arch="arm64"
           fi
-          lipo -verify_arch "$binary_arch" "$app_path/Contents/MacOS/GitOK"
+          lipo "$app_path/Contents/MacOS/GitOK" -verify_arch "$binary_arch"
           mkdir unsigned-artifacts
           ditto -c -k --sequesterRsrc --keepParent "$app_path" "unsigned-artifacts/unsigned-${TARGET_ARCH}.zip"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
