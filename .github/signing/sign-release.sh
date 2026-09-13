@@ -66,7 +66,7 @@ for arch in arm64 x64; do
 
   identity="$(node .github/signing/sign-app.cjs "$app_path" "$keychain_path" "$APPLE_TEAM_ID")"
   codesign --verify --deep --strict --verbose=2 "$app_path"
-  codesign --verify -R "anchor apple generic and certificate leaf[subject.OU] = \"$APPLE_TEAM_ID\"" "$app_path"
+  codesign --verify -R "=anchor apple generic and certificate leaf[subject.OU] = \"$APPLE_TEAM_ID\"" "$app_path"
   ditto -c -k --sequesterRsrc --keepParent "$app_path" "$arch_path/notarization.zip"
   notarize "$arch_path/notarization.zip" "$arch_path/app-notarization.json"
   xcrun stapler staple "$app_path"
