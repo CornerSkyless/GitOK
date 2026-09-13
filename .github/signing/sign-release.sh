@@ -27,6 +27,9 @@ printf '%s' "$APPLE_CERTIFICATE_P12_BASE64" | /usr/bin/base64 --decode > "$certi
 security create-keychain -p "$keychain_password" "$keychain_path"
 security set-keychain-settings -lut 10800 "$keychain_path"
 security unlock-keychain -p "$keychain_password" "$keychain_path"
+# codesign also requires the explicitly selected keychain in the search list.
+# This job runs on a fresh, disposable runner with no other signing identities.
+security list-keychains -d user -s "$keychain_path"
 security import "$certificate_path" -P "$APPLE_CERTIFICATE_PASSWORD" -k "$keychain_path" -T /usr/bin/codesign -T /usr/bin/security >/dev/null
 security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain_path" >/dev/null
 rm -f "$certificate_path"
@@ -43,12 +46,14 @@ version="${GITHUB_REF_NAME#v}"
 notarize() {
   local file="$1"
   local receipt="$2"
+  echo "Submitting $(basename "$file") to Apple notarization."
   xcrun notarytool submit "$file" --keychain "$keychain_path" \
     --keychain-profile gitok-notary --wait --timeout 30m --output-format json > "$receipt"
   node -e 'const r = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")); if (r.status !== "Accepted") { console.error("Apple notarization failed:", r.status, "submission:", r.id); process.exit(1); } console.log("Apple notarization accepted:", r.id)' "$receipt"
 }
 
 for arch in arm64 x64; do
+  echo "Signing GitOK for $arch."
   arch_path="$work_path/$arch"
   mkdir -p "$arch_path"
   ditto -x -k "$RUNNER_TEMP/unsigned-artifacts/unsigned-${arch}.zip" "$arch_path"
